@@ -90,7 +90,7 @@ public class RawSecurityDescriptor : GenericSecurityDescriptor
     {
         securityDescriptor = null;
 
-        if (binaryForm == null || 0x14 > binaryForm.Length || binaryForm[0] != 1)
+        if (0x14 > binaryForm.Length || binaryForm[0] != 1)
         {
             return false;
         }

@@ -233,10 +233,9 @@ class MyFileSystemFactory : VfsFileSystemFactory
 {
     public override IEnumerable<DiscUtils.FileSystemInfo> Detect(Stream stream, VolumeInfo volumeInfo)
     {
-        var header = new byte[4];
-        stream.Read(header, 0, 4);
+        var header = stream.ReadExactly(4);
 
-        if (Encoding.ASCII.GetString(header, 0, 4) == "MYFS")
+        if ("MYFS"u8.SequenceEqual(header))
         {
             return SingleValueEnumerable.Get(new VfsFileSystemInfo("MyFs", "My File System", Open));
         }

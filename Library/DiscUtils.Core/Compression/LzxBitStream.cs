@@ -20,6 +20,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+using DiscUtils.Streams;
 using System;
 using System.IO;
 
@@ -143,7 +144,7 @@ internal sealed class LzxBitStream : BitStream
         {
             _readBuffer[0] = 0;
             _readBuffer[1] = 0;
-            _byteStream.Read(_readBuffer, 0, 2);
+            _byteStream.ReadExactly(_readBuffer, 0, 2);
 
             _buffer = _buffer << 16 | (uint)(_readBuffer[1] << 8) | _readBuffer[0];
             _bufferAvailable += 16;

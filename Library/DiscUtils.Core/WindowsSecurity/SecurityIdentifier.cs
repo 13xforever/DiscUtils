@@ -65,7 +65,7 @@ public sealed class SecurityIdentifier : IdentityReference, IComparable<Security
     {
         securityIdentifier = null;
 
-        if (binaryForm == null || (2 > binaryForm.Length))
+        if (2 > binaryForm.Length)
         {
             return false;
         }

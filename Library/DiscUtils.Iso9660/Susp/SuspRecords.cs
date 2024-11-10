@@ -48,7 +48,7 @@ internal sealed class SuspRecords
 
     public static bool DetectSharingProtocol(ReadOnlySpan<byte> data)
     {
-        if (data == null || data.Length < 7)
+        if (data.Length < 7)
         {
             return false;
         }

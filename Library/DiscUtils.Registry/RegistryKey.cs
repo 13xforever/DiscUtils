@@ -743,10 +743,6 @@ public sealed class RegistryKey
         try
         {
             var valueList = _hive.RawCellData(_cell.ValueListIndex, valueListMem.AsSpan(0, _cell.NumValues * 4));
-            if (valueList == null)
-            {
-                valueList = Array.Empty<byte>();
-            }
 
             var insertIdx = 0;
             while (insertIdx < _cell.NumValues)

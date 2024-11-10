@@ -64,7 +64,7 @@ public sealed class RawAcl : GenericAcl
     {
         rawAcl = null;
 
-        if (binaryForm == null || 8 > binaryForm.Length)
+        if (8 > binaryForm.Length)
         {
             return false;
         }

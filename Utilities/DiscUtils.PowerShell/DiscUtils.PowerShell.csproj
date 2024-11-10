@@ -4,7 +4,7 @@
     <TargetFrameworks>net46;net48;net8.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup Condition=" '$(TargetFramework.CompareTo(`net5`))' &gt;= 0">
-    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.4.5" />
+    <PackageReference Include="Microsoft.PowerShell.SDK" Version="*" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DiscUtils.Common\DiscUtils.Common.csproj" />
@@ -13,7 +13,7 @@
     <ProjectReference Include="..\..\Library\DiscUtils.FileSystems\DiscUtils.FileSystems.csproj" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework.CompareTo(`net5`))' &lt; 0">
-    <PackageReference Include="Microsoft.PowerShell.5.ReferenceAssemblies" Version="1.1.0" />
+    <PackageReference Include="Microsoft.PowerShell.5.ReferenceAssemblies" Version="1.*" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />

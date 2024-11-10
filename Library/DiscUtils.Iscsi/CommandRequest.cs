@@ -60,7 +60,7 @@ internal class CommandRequest
         EndianUtilities.WriteBytesBigEndian(_connection.ExpectedStatusSequenceNumber, buffer, 28);
         cmd.WriteTo(buffer, 32);
 
-        if (immediateData != null && immediateData.Length != 0)
+        if (!immediateData.IsEmpty)
         {
             immediateData.CopyTo(buffer.AsSpan(48));
         }

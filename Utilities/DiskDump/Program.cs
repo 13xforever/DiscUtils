@@ -28,6 +28,7 @@ using DiscUtils;
 using DiscUtils.Common;
 using DiscUtils.LogicalDiskManager;
 using DiscUtils.Partitions;
+using DiscUtils.Streams;
 
 namespace DiskDump;
 
@@ -122,9 +123,8 @@ class Program : ProgramBase
                 Console.WriteLine();
                 try
                 {
-                    var mbr = new byte[512];
                     disk.Content.Position = 0;
-                    disk.Content.Read(mbr, 0, 512);
+                    var mbr = disk.Content.ReadExactly(512);
                     HexDump.Generate(mbr, Console.Out);
                 }
                 catch (Exception e)
@@ -343,7 +343,7 @@ class Program : ProgramBase
         }
     }
 
-    private static char[] BadNameChars = ['\r', '\n', '\0'];
+    private static readonly char[] BadNameChars = ['\r', '\n', '\0'];
 
     private static string CleanName(string name)
     {
