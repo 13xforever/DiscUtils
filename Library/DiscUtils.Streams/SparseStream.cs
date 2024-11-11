@@ -243,8 +243,16 @@ public abstract class SparseStream : CompatibilityStream
 
         public SparseWrapperStream(Stream wrapped, Ownership ownsWrapped, IEnumerable<StreamExtent> extents)
         {
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(wrapped);
             _wrapped = wrapped;
+#else
+            _wrapped = wrapped
+                ?? throw new ArgumentNullException(nameof(wrapped));
+#endif
+
             _ownsWrapped = ownsWrapped;
+
             if (extents != null)
             {
                 _extents = new List<StreamExtent>(extents);
