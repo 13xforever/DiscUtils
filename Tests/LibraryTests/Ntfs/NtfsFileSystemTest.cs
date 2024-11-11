@@ -256,7 +256,7 @@ public class NtfsFileSystemTest
 
         var read = new byte[100];
         ms.Position = extents[0].Start;
-        ms.Read(read, 0, 100);
+        ms.ReadExactly(read, 0, 100);
 
         Assert.Equal(0xBA, read[0]);
         Assert.Equal(0x82, read[1]);

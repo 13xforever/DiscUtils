@@ -101,7 +101,7 @@ public class NtfsFileSystemAsyncTest
 
         var read = new byte[100];
         ms.Position = extents[0].Start;
-        await ms.ReadAsync(read);
+        await ms.ReadExactlyAsync(read);
 
         Assert.Equal(0xBA, read[0]);
         Assert.Equal(0x82, read[1]);

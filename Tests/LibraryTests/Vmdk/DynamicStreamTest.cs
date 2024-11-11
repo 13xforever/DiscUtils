@@ -37,7 +37,7 @@ public class DynamicStreamTest
     {
         DiscFileSystem fs = new InMemoryFileSystem();
         using var disk = Disk.Initialize(fs, "a.vmdk", 16 * 1024L * 1024 * 1024, DiskCreateType.MonolithicSparse);
-        Stream s = disk.Content;
+        var s = disk.Content;
         Assert.True(s.CanRead);
         Assert.True(s.CanWrite);
         Assert.True(s.CanSeek);
@@ -55,7 +55,7 @@ public class DynamicStreamTest
                 content[i] = (byte)i;
             }
 
-            Stream s = disk.Content;
+            var s = disk.Content;
             s.Write(content, 10, 40);
             Assert.Equal(40, s.Position);
             s.Write(content, 50, 50);
@@ -63,7 +63,7 @@ public class DynamicStreamTest
             s.Position = 0;
 
             var buffer = new byte[100];
-            s.Read(buffer, 10, 60);
+            s.ReadExactly(buffer, 10, 60);
             Assert.Equal(60, s.Position);
             for (var i = 0; i < 10; ++i)
             {
@@ -79,10 +79,10 @@ public class DynamicStreamTest
         // Check the data persisted
         using (var disk = new Disk(fs, "a.vmdk", FileAccess.Read))
         {
-            Stream s = disk.Content;
+            var s = disk.Content;
 
             var buffer = new byte[100];
-            s.Read(buffer, 10, 20);
+            s.ReadExactly(buffer, 10, 20);
             Assert.Equal(20, s.Position);
             for (var i = 0; i < 10; ++i)
             {
@@ -110,13 +110,13 @@ public class DynamicStreamTest
             content[i * 4 + 3] = (byte)(i & 0xFF);
         }
 
-        Stream s = disk.Content;
+        var s = disk.Content;
         s.Position = 10;
         s.Write(content, 0, content.Length);
 
         var buffer = new byte[content.Length];
         s.Position = 10;
-        s.Read(buffer, 0, buffer.Length);
+        s.ReadExactly(buffer, 0, buffer.Length);
 
         for (var i = 0; i < content.Length; ++i)
         {
@@ -130,7 +130,7 @@ public class DynamicStreamTest
     [Fact]
     public void DisposeTest()
     {
-        Stream contentStream;
+        SparseStream contentStream;
 
         DiscFileSystem fs = new InMemoryFileSystem();
         using (var disk = Disk.Initialize(fs, "a.vmdk", 16 * 1024L * 1024 * 1024, DiskCreateType.TwoGbMaxExtentSparse))
@@ -149,7 +149,7 @@ public class DynamicStreamTest
     [Fact]
     public void DisposeTestMonolithicSparse()
     {
-        Stream contentStream;
+        SparseStream contentStream;
 
         DiscFileSystem fs = new InMemoryFileSystem();
         using (var disk = Disk.Initialize(fs, "a.vmdk", 16 * 1024L * 1024 * 1024, DiskCreateType.MonolithicSparse))
@@ -172,7 +172,7 @@ public class DynamicStreamTest
         using var disk = Disk.Initialize(fs, "a.vmdk", 16 * 1024L * 1024 * 1024, DiskCreateType.TwoGbMaxExtentSparse);
         var buffer = new byte[100];
         disk.Content.Seek(2 * 1024 * 1024, SeekOrigin.Current);
-        disk.Content.Read(buffer, 0, buffer.Length);
+        disk.Content.ReadExactly(buffer, 0, buffer.Length);
 
         for (var i = 0; i < 100; ++i)
         {
@@ -188,7 +188,7 @@ public class DynamicStreamTest
     {
         DiscFileSystem fs = new InMemoryFileSystem();
         using var disk = Disk.Initialize(fs, "a.vmdk", 16 * 1024L * 1024 * 1024, DiskCreateType.VmfsSparse);
-        Stream s = disk.Content;
+        var s = disk.Content;
         Assert.True(s.CanRead);
         Assert.True(s.CanWrite);
         Assert.True(s.CanSeek);
@@ -206,7 +206,7 @@ public class DynamicStreamTest
                 content[i] = (byte)i;
             }
 
-            Stream s = disk.Content;
+            var s = disk.Content;
             s.Write(content, 10, 40);
             Assert.Equal(40, s.Position);
             s.Write(content, 50, 50);
@@ -214,7 +214,7 @@ public class DynamicStreamTest
             s.Position = 0;
 
             var buffer = new byte[100];
-            s.Read(buffer, 10, 60);
+            s.ReadExactly(buffer, 10, 60);
             Assert.Equal(60, s.Position);
             for (var i = 0; i < 10; ++i)
             {
@@ -230,10 +230,10 @@ public class DynamicStreamTest
         // Check the data persisted
         using (var disk = new Disk(fs, "a.vmdk", FileAccess.Read))
         {
-            Stream s = disk.Content;
+            var s = disk.Content;
 
             var buffer = new byte[100];
-            s.Read(buffer, 10, 20);
+            s.ReadExactly(buffer, 10, 20);
             Assert.Equal(20, s.Position);
             for (var i = 0; i < 10; ++i)
             {
@@ -261,13 +261,13 @@ public class DynamicStreamTest
             content[i * 4 + 3] = (byte)(i & 0xFF);
         }
 
-        Stream s = disk.Content;
+        var s = disk.Content;
         s.Position = 10;
         s.Write(content, 0, content.Length);
 
         var buffer = new byte[content.Length];
         s.Position = 10;
-        s.Read(buffer, 0, buffer.Length);
+        s.ReadExactly(buffer, 0, buffer.Length);
 
         for (var i = 0; i < content.Length; ++i)
         {
@@ -281,7 +281,7 @@ public class DynamicStreamTest
     [Fact]
     public void DisposeTestVmfs()
     {
-        Stream contentStream;
+        SparseStream contentStream;
 
         DiscFileSystem fs = new InMemoryFileSystem();
         using (var disk = Disk.Initialize(fs, "a.vmdk", 16 * 1024L * 1024 * 1024, DiskCreateType.VmfsSparse))
@@ -304,7 +304,7 @@ public class DynamicStreamTest
         using var disk = Disk.Initialize(fs, "a.vmdk", 16 * 1024L * 1024 * 1024, DiskCreateType.VmfsSparse);
         var buffer = new byte[100];
         disk.Content.Seek(2 * 1024 * 1024, SeekOrigin.Current);
-        disk.Content.Read(buffer, 0, buffer.Length);
+        disk.Content.ReadExactly(buffer, 0, buffer.Length);
 
         for (var i = 0; i < 100; ++i)
         {

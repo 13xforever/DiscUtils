@@ -38,7 +38,7 @@ public sealed class BlockCacheStreamTest
         // Pre-load read cache with a 'short' block
         bcs.Write(new byte[11], 0, 11);
         bcs.Position = 0;
-        bcs.Read(new byte[11], 0, 11);
+        bcs.ReadExactly(new byte[11], 0, 11);
 
         // Extend stream
         for(var i = 0; i < 20; ++i)
@@ -49,6 +49,6 @@ public sealed class BlockCacheStreamTest
         // Try to read from first block beyond length of original cached short length
         // Bug was throwing exception here
         bcs.Position = 60;
-        bcs.Read(new byte[20], 0, 20);
+        bcs.ReadExactly(new byte[20], 0, 20);
     }
 }

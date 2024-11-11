@@ -35,7 +35,7 @@ public class StreamTest
     {
         var stream = new MemoryStream();
         using var disk = Disk.InitializeDynamic(stream, Ownership.Dispose, 16 * 1024L * 1024 * 1024);
-        Stream s = disk.Content;
+        var s = disk.Content;
         Assert.True(s.CanRead);
         Assert.True(s.CanWrite);
         Assert.True(s.CanSeek);
@@ -53,7 +53,7 @@ public class StreamTest
                 content[i] = (byte)i;
             }
 
-            Stream s = disk.Content;
+            var s = disk.Content;
             s.Write(content, 10, 40);
             Assert.Equal(40, s.Position);
             s.Write(content, 50, 50);
@@ -61,7 +61,7 @@ public class StreamTest
             s.Position = 0;
 
             var buffer = new byte[100];
-            s.Read(buffer, 10, 60);
+            s.ReadExactly(buffer, 10, 60);
             Assert.Equal(60, s.Position);
             for (var i = 0; i < 10; ++i)
             {
@@ -77,10 +77,10 @@ public class StreamTest
         // Check the data persisted
         using (var disk = new Disk(stream))
         {
-            Stream s = disk.Content;
+            var s = disk.Content;
 
             var buffer = new byte[100];
-            s.Read(buffer, 10, 20);
+            s.ReadExactly(buffer, 10, 20);
             Assert.Equal(20, s.Position);
             for (var i = 0; i < 10; ++i)
             {
@@ -105,13 +105,13 @@ public class StreamTest
             content[i] = (byte)i;
         }
 
-        Stream s = disk.Content;
+        var s = disk.Content;
         s.Position = 10;
         s.Write(content, 0, content.Length);
 
         var buffer = new byte[content.Length];
         s.Position = 10;
-        s.Read(buffer, 0, buffer.Length);
+        s.ReadExactly(buffer, 0, buffer.Length);
 
         for (var i = 0; i < content.Length; ++i)
         {
@@ -125,7 +125,7 @@ public class StreamTest
     [Fact]
     public void DisposeTest()
     {
-        Stream contentStream;
+        SparseStream contentStream;
 
         var stream = new MemoryStream();
         using (var disk = Disk.InitializeDynamic(stream, Ownership.None, 16 * 1024L * 1024 * 1024))

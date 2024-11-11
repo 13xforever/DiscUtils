@@ -30,6 +30,8 @@ using System.Text;
 
 namespace DiscUtils.PowerShell.VirtualDiskProvider;
 
+#pragma warning disable IDE0079 // Remove unnecessary suppression
+
 internal sealed class FileContentReaderWriter : IContentWriter, IContentReader
 {
     private Provider _provider;
@@ -214,7 +216,9 @@ internal sealed class FileContentReaderWriter : IContentWriter, IContentReader
         {
             ContentEncoding.BigEndianUnicode => Encoding.BigEndianUnicode,
             ContentEncoding.UTF8 => Encoding.UTF8,
+#pragma warning disable SYSLIB0001 // Type or member is obsolete
             ContentEncoding.UTF7 => Encoding.UTF7,
+#pragma warning restore SYSLIB0001 // Type or member is obsolete
             ContentEncoding.Unicode => Encoding.Unicode,
             ContentEncoding.Ascii => Encoding.ASCII,
             _ => defEncoding,

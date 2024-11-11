@@ -45,7 +45,7 @@ public class ZlibStreamTest
         compressedStream.Position = 0;
         using var uzs = new ZlibStream(compressedStream, CompressionMode.Decompress, true);
         var outData = new byte[testData.Length];
-        uzs.Read(outData, 0, outData.Length);
+        uzs.ReadExactly(outData, 0, outData.Length);
         Assert.Equal(testData, outData);
 
         // Should be end of stream
@@ -72,7 +72,7 @@ public class ZlibStreamTest
         {
             using var uzs = new ZlibStream(compressedStream, CompressionMode.Decompress, true);
             var outData = new byte[testData.Length];
-            uzs.Read(outData, 0, outData.Length);
+            uzs.ReadExactly(outData, 0, outData.Length);
             Assert.Equal(testData, outData);
 
             // Should be end of stream

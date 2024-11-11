@@ -66,7 +66,7 @@ public class BlockCacheTest
 
         var buffer = new byte[40];
         cacheStream.Position = 0;
-        cacheStream.Read(buffer, 0, buffer.Length);
+        cacheStream.ReadExactly(buffer, 0, buffer.Length);
 
         AssertSequenced(buffer, 0);
         Assert.Equal(1, cacheStream.Statistics.LargeReadsIn);
@@ -83,7 +83,7 @@ public class BlockCacheTest
 
         var buffer = new byte[20];
         cacheStream.Position = 0;
-        cacheStream.Read(buffer, 0, buffer.Length);
+        cacheStream.ReadExactly(buffer, 0, buffer.Length);
 
         AssertSequenced(buffer, 0);
         Assert.Equal(0, cacheStream.Statistics.LargeReadsIn);
@@ -100,7 +100,7 @@ public class BlockCacheTest
 
         var buffer = new byte[20];
         cacheStream.Position = 0;
-        cacheStream.Read(buffer, 0, buffer.Length);
+        cacheStream.ReadExactly(buffer, 0, buffer.Length);
 
         AssertSequenced(buffer, 0);
         Assert.Equal(0, cacheStream.Statistics.LargeReadsIn);
@@ -109,7 +109,7 @@ public class BlockCacheTest
 
         buffer = new byte[buffer.Length];
         cacheStream.Position = 0;
-        cacheStream.Read(buffer, 0, buffer.Length);
+        cacheStream.ReadExactly(buffer, 0, buffer.Length);
 
         AssertSequenced(buffer, 0);
         Assert.Equal(0, cacheStream.Statistics.LargeReadsIn);
@@ -126,7 +126,7 @@ public class BlockCacheTest
 
         var buffer = new byte[20];
         cacheStream.Position = 3;
-        cacheStream.Read(buffer, 0, buffer.Length);
+        cacheStream.ReadExactly(buffer, 0, buffer.Length);
 
         AssertSequenced(buffer, 3);
         Assert.Equal(0, cacheStream.Statistics.LargeReadsIn);
@@ -143,7 +143,7 @@ public class BlockCacheTest
 
         var buffer = new byte[20];
         cacheStream.Position = 3;
-        cacheStream.Read(buffer, 0, buffer.Length);
+        cacheStream.ReadExactly(buffer, 0, buffer.Length);
 
         AssertSequenced(buffer, 3);
         Assert.Equal(0, cacheStream.Statistics.LargeReadsIn);
@@ -152,7 +152,7 @@ public class BlockCacheTest
 
         buffer = new byte[buffer.Length];
         cacheStream.Position = 3;
-        cacheStream.Read(buffer, 0, buffer.Length);
+        cacheStream.ReadExactly(buffer, 0, buffer.Length);
 
         AssertSequenced(buffer, 3);
         Assert.Equal(0, cacheStream.Statistics.LargeReadsIn);
@@ -243,7 +243,7 @@ public class BlockCacheTest
 
         var buffer = new byte[20];
         cacheStream.Position = 10;
-        cacheStream.Read(buffer, 0, buffer.Length);
+        cacheStream.ReadExactly(buffer, 0, buffer.Length);
 
         AssertSequenced(buffer, 10);
 
@@ -253,7 +253,7 @@ public class BlockCacheTest
 
         cacheStream.Position = 10;
         buffer = new byte[30];
-        cacheStream.Read(buffer, 0, buffer.Length);
+        cacheStream.ReadExactly(buffer, 0, buffer.Length);
 
         AssertSequenced(buffer, 0, 10, 10);
         AssertSequenced(buffer, 20, 10, 30);
@@ -270,7 +270,7 @@ public class BlockCacheTest
 
         var buffer = new byte[25];
         cacheStream.Position = 0;
-        cacheStream.Read(buffer, 0, buffer.Length);
+        cacheStream.ReadExactly(buffer, 0, buffer.Length);
 
         AssertSequenced(buffer, 0);
 
