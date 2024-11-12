@@ -178,59 +178,131 @@ public abstract class SparseStream : CompatibilityStream
             _ownsWrapped = ownsWrapped;
         }
 
-        public override bool CanRead => _wrapped.CanRead;
+        public override bool CanRead
+        {
+            get
+            {
+                CheckDisposed();
 
-        public override bool CanSeek => _wrapped.CanSeek;
+                return _wrapped.CanRead;
+            }
+        }
 
-        public override IEnumerable<StreamExtent> Extents => _wrapped.Extents;
+        public override bool CanSeek
+        {
+            get
+            {
+                CheckDisposed();
 
-        public override long Length => _wrapped.Length;
+                return _wrapped.CanSeek;
+            }
+        }
+
+        public override IEnumerable<StreamExtent> Extents
+        {
+            get
+            {
+                CheckDisposed();
+
+                return _wrapped.Extents;
+            }
+        }
+
+        public override long Length
+        {
+            get
+            {
+                CheckDisposed();
+
+                return _wrapped.Length;
+            }
+        }
 
         public override long Position
         {
-            get => _wrapped.Position;
+            get
+            {
+                CheckDisposed();
 
-            set => _wrapped.Position = value;
+                return _wrapped.Position;
+            }
+
+            set
+            {
+                CheckDisposed();
+
+                _wrapped.Position = value;
+            }
         }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+            CheckDisposed();
+
             return _wrapped.Read(buffer, offset, count);
         }
 
         public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
+            CheckDisposed();
+
             return _wrapped.ReadAsync(buffer, offset, count, cancellationToken);
         }
 
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
+            CheckDisposed();
+
             return _wrapped.ReadAsync(buffer, cancellationToken);
         }
 
         public override int Read(Span<byte> buffer)
         {
+            CheckDisposed();
+
             return _wrapped.Read(buffer);
         }
 
         public override long Seek(long offset, SeekOrigin origin)
         {
+            CheckDisposed();
+
             return _wrapped.Seek(offset, origin);
+        }
+
+        private void CheckDisposed()
+        {
+#if NET7_0_OR_GREATER
+            ObjectDisposedException.ThrowIf(_wrapped is null, this);
+#else
+            if (_wrapped is null)
+            {
+                throw new ObjectDisposedException(nameof(SparseWrapperStream));
+            }
+#endif
         }
 
         protected override void Dispose(bool disposing)
         {
             try
             {
+                Disposing?.Invoke(this, EventArgs.Empty);
+
                 if (disposing && _ownsWrapped == Ownership.Dispose && _wrapped != null)
                 {
                     _wrapped.Dispose();
-                    _wrapped = null;
                 }
+
+                _wrapped = null;
             }
             finally
             {
                 base.Dispose(disposing);
+
+                if (disposing)
+                {
+                    Disposed?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
     }
@@ -259,16 +331,42 @@ public abstract class SparseStream : CompatibilityStream
             }
         }
 
-        public override bool CanRead => _wrapped.CanRead;
+        public override bool CanRead
+        {
+            get
+            {
+                CheckDisposed();
 
-        public override bool CanSeek => _wrapped.CanSeek;
+                return _wrapped.CanRead;
+            }
+        }
 
-        public override bool CanWrite => _wrapped.CanWrite;
+        public override bool CanSeek
+        {
+            get
+            {
+                CheckDisposed();
+
+                return _wrapped.CanSeek;
+            }
+        }
+
+        public override bool CanWrite
+        {
+            get
+            {
+                CheckDisposed();
+
+                return _wrapped.CanWrite;
+            }
+        }
 
         public override IEnumerable<StreamExtent> Extents
         {
             get
             {
+                CheckDisposed();
+
                 if (_extents != null)
                 {
                     return _extents;
@@ -283,52 +381,86 @@ public abstract class SparseStream : CompatibilityStream
             }
         }
 
-        public override long Length => _wrapped.Length;
+        public override long Length
+        {
+            get
+            {
+                CheckDisposed();
+
+                return _wrapped.Length;
+            }
+        }
 
         public override long Position
         {
-            get => _wrapped.Position;
+            get
+            {
+                CheckDisposed();
 
-            set => _wrapped.Position = value;
+                return _wrapped.Position;
+            }
+
+            set
+            {
+                CheckDisposed();
+
+                _wrapped.Position = value;
+            }
         }
 
         public override void Flush()
         {
+            CheckDisposed();
+
             _wrapped.Flush();
         }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+            CheckDisposed();
+
             return _wrapped.Read(buffer, offset, count);
         }
 
         public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
+            CheckDisposed();
+
             return _wrapped.ReadAsync(buffer, offset, count, cancellationToken);
         }
 
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
+            CheckDisposed();
+
             return _wrapped.ReadAsync(buffer, cancellationToken);
         }
 
         public override int Read(Span<byte> buffer)
         {
+            CheckDisposed();
+
             return _wrapped.Read(buffer);
         }
 
         public override long Seek(long offset, SeekOrigin origin)
         {
+            CheckDisposed();
+
             return _wrapped.Seek(offset, origin);
         }
 
         public override void SetLength(long value)
         {
+            CheckDisposed();
+
             _wrapped.SetLength(value);
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
+            CheckDisposed();
+
             if (_extents != null)
             {
                 throw new InvalidOperationException("Attempt to write to stream with explicit extents");
@@ -339,6 +471,8 @@ public abstract class SparseStream : CompatibilityStream
 
         public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
+            CheckDisposed();
+
             if (_extents != null)
             {
                 throw new InvalidOperationException("Attempt to write to stream with explicit extents");
@@ -349,6 +483,8 @@ public abstract class SparseStream : CompatibilityStream
 
         public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
         {
+            CheckDisposed();
+
             if (_extents != null)
             {
                 throw new InvalidOperationException("Attempt to write to stream with explicit extents");
@@ -359,6 +495,8 @@ public abstract class SparseStream : CompatibilityStream
 
         public override void Write(ReadOnlySpan<byte> buffer)
         {
+            CheckDisposed();
+
             if (_extents != null)
             {
                 throw new InvalidOperationException("Attempt to write to stream with explicit extents");
@@ -367,8 +505,24 @@ public abstract class SparseStream : CompatibilityStream
             _wrapped.Write(buffer);
         }
 
-        public override Task FlushAsync(CancellationToken cancellationToken) =>
-            _wrapped.FlushAsync(cancellationToken);
+        public override Task FlushAsync(CancellationToken cancellationToken)
+        {
+            CheckDisposed();
+
+            return _wrapped.FlushAsync(cancellationToken);
+        }
+
+        private void CheckDisposed()
+        {
+#if NET7_0_OR_GREATER
+            ObjectDisposedException.ThrowIf(_wrapped is null, this);
+#else
+            if (_wrapped is null)
+            {
+                throw new ObjectDisposedException(nameof(SparseWrapperStream));
+            }
+#endif
+        }
 
         protected override void Dispose(bool disposing)
         {
