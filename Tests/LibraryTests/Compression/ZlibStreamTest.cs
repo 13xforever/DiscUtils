@@ -24,6 +24,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 using DiscUtils.Compression;
+using DiscUtils.Streams;
 using Xunit;
 
 namespace LibraryTests.Compression;
