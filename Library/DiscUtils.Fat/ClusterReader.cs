@@ -53,11 +53,16 @@ internal sealed class ClusterReader
         _clusterSize = _sectorsPerCluster * _bytesPerSector;
     }
 
+    public Stream BaseStream => _stream;
+
     public int ClusterSize => _clusterSize;
 
     public int BytesPerSector => _bytesPerSector;
 
     public int SectorsPerCluster => _sectorsPerCluster;
+
+    public long GetBaseStreamPositionForCluster(uint cluster)
+        => ((uint)((cluster - 2) * _sectorsPerCluster + _firstDataSector)) * _bytesPerSector;
 
     public void ReadCluster(uint cluster, byte[] buffer, int offset)
     {

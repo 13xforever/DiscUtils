@@ -48,6 +48,16 @@ internal class FatFileStream : SparseStream
         _stream.FirstClusterChanged += FirstClusterAllocatedHandler;
     }
 
+    public override long? GetPositionInBaseStream(Stream baseStream, long virtualPosition)
+    {
+        if (ReferenceEquals(baseStream, this))
+        {
+            return virtualPosition;
+        }
+
+        return _stream?.GetPositionInBaseStream(baseStream, virtualPosition);
+    }
+
     public override bool CanRead => _stream.CanRead;
 
     public override bool CanSeek => _stream.CanSeek;

@@ -25,6 +25,7 @@ using DiscUtils.Streams.Compatibility;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -61,6 +62,23 @@ internal class ClusterStream : CompatibilityStream
 
         _currentCluster = uint.MaxValue;
         _clusterBuffer = new byte[_reader.ClusterSize];
+    }
+
+    public override long? GetPositionInBaseStream(Stream baseStream, long virtualPosition)
+    {
+        if (ReferenceEquals(baseStream, this))
+        {
+            return virtualPosition;
+        }
+
+        if (TryGetClusterByPosition(virtualPosition, out var cluster))
+        {
+            var volumePos = _reader.GetBaseStreamPositionForCluster(cluster);
+
+            return _reader.BaseStream.GetPositionInBaseStream(baseStream, volumePos);
+        }
+
+        return null;
     }
 
     public override bool CanRead => _access is FileAccess.Read or FileAccess.ReadWrite;

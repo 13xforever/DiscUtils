@@ -1249,6 +1249,21 @@ internal class File
             _wrapped = attr.Open(access);
         }
 
+        public override long? GetPositionInBaseStream(Stream baseStream, long virtualPosition)
+        {
+            if (ReferenceEquals(baseStream, this))
+            {
+                return virtualPosition;
+            }
+
+            if (_wrapped.GetPositionInBaseStream(baseStream, virtualPosition) is { } basePos)
+            {
+                return basePos;
+            }
+
+            return _attr.OffsetToAbsolutePos(virtualPosition);
+        }
+
         public override bool CanRead => _wrapped.CanRead;
 
         public override bool CanSeek => _wrapped.CanSeek;

@@ -28,7 +28,6 @@ using DiscUtils.Ntfs;
 using DiscUtils.Streams;
 using Xunit;
 using System.Linq;
-using System.Net.WebSockets;
 using System.Threading.Tasks;
 using System.Threading;
 using DiscUtils.Streams.Compatibility;
@@ -859,5 +858,89 @@ public class NtfsFileSystemTest
 
             Assert.Equal(data, readBuffer);
         }
+    }
+
+    [Fact]
+    public void TestFindPositionSmallFile()
+    {
+        var pattern = "HELLO WORLD"u8;
+
+        using var diskStream = new SparseMemoryStream();
+        using var fs = NtfsFileSystem.Format(diskStream,
+                                             label: "PARTITION",
+                                             diskGeometry: Geometry.FromCapacity(20 << 20, 512),
+                                             firstSector: 0,
+                                             sectorCount: 20 << 11);
+
+        using (var file = fs.OpenFile("Test.txt", FileMode.Create, FileAccess.ReadWrite))
+        {
+            file.Write(pattern);
+        }
+
+        long? locationOnDisk;
+
+        Span<byte> buffer = stackalloc byte[pattern.Length];
+
+        using (var file = fs.OpenFile("Test.txt", FileMode.Open, FileAccess.Read))
+        {
+            buffer.Clear();
+            file.ReadExactly(buffer);
+
+            Assert.True(pattern.SequenceEqual(buffer));
+
+            locationOnDisk = file.GetPositionInBaseStream(diskStream, 0);
+        }
+
+        Assert.NotNull(locationOnDisk);
+        Assert.NotEqual(0, locationOnDisk.Value);
+
+        diskStream.Position = locationOnDisk.Value;
+        buffer.Clear();
+        diskStream.ReadExactly(buffer);
+
+        Assert.True(pattern.SequenceEqual(buffer));
+    }
+
+    [Fact]
+    public void TestFindPositionBigFile()
+    {
+        var pattern = new byte[512 << 10];
+
+        pattern.AsSpan().Fill((byte)'A');
+
+        using var diskStream = new SparseMemoryStream();
+        using var fs = NtfsFileSystem.Format(diskStream,
+                                             label: "PARTITION",
+                                             diskGeometry: Geometry.FromCapacity(20 << 20, 512),
+                                             firstSector: 0,
+                                             sectorCount: 20 << 11);
+
+        using (var file = fs.OpenFile("Test.txt", FileMode.Create, FileAccess.ReadWrite))
+        {
+            file.Write(pattern);
+        }
+
+        long? locationOnDisk;
+
+        var buffer = new byte[pattern.Length];
+
+        using (var file = fs.OpenFile("Test.txt", FileMode.Open, FileAccess.Read))
+        {
+            buffer.AsSpan().Clear();
+            file.ReadExactly(buffer);
+
+            Assert.Equal(pattern, buffer);
+
+            locationOnDisk = file.GetPositionInBaseStream(diskStream, 0);
+        }
+
+        Assert.NotNull(locationOnDisk);
+        Assert.NotEqual(0, locationOnDisk.Value);
+
+        diskStream.Position = locationOnDisk.Value;
+        buffer.AsSpan().Clear();
+        diskStream.ReadExactly(buffer);
+
+        Assert.Equal(pattern, buffer);
     }
 }

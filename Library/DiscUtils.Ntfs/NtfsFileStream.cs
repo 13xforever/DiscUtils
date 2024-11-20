@@ -88,6 +88,16 @@ internal sealed class NtfsFileStream : SparseStream
         }
     }
 
+    public override long? GetPositionInBaseStream(Stream baseStream, long virtualPosition)
+    {
+        if (ReferenceEquals(baseStream, this))
+        {
+            return virtualPosition;
+        }
+
+        return _baseStream.GetPositionInBaseStream(baseStream, virtualPosition);
+    }
+
     public override bool CanRead
     {
         get

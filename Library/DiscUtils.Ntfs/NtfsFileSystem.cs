@@ -1357,7 +1357,7 @@ public sealed class NtfsFileSystem : DiscFileSystem, IClusterBasedFileSystem,
             if (stream != null)
             {
                 // If there's an existing reparse point, unhook it.
-                using Stream contentStream = stream.Value.Open(FileAccess.Read);
+                using var contentStream = stream.Value.Open(FileAccess.Read);
                 var rp = contentStream.ReadStruct<ReparsePointRecord>((int)contentStream.Length);
                 _context.ReparsePoints.Remove(rp.Tag, dirEntry.Reference);
             }
@@ -1422,7 +1422,7 @@ public sealed class NtfsFileSystem : DiscFileSystem, IClusterBasedFileSystem,
             if (stream != null)
             {
 
-                using Stream contentStream = stream.Value.Open(FileAccess.Read);
+                using var contentStream = stream.Value.Open(FileAccess.Read);
                 var rp = contentStream.ReadStruct<ReparsePointRecord>((int)contentStream.Length);
                 return new ReparsePoint((int)rp.Tag, rp.Content);
             }
@@ -2362,7 +2362,7 @@ public sealed class NtfsFileSystem : DiscFileSystem, IClusterBasedFileSystem,
         {
             var rp = new ReparsePointRecord();
 
-            using (Stream contentStream = stream.Value.Open(FileAccess.Read))
+            using (var contentStream = stream.Value.Open(FileAccess.Read))
             {
                 rp.ReadFrom(contentStream, (int)contentStream.Length);
             }
