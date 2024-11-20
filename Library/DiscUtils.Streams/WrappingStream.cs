@@ -46,6 +46,16 @@ public class WrappingStream : SparseStream
         _ownership = ownership;
     }
 
+    public override long? GetPositionInBaseStream(Stream baseStream, long virtualPosition)
+    {
+        if (ReferenceEquals(baseStream, this))
+        {
+            return virtualPosition;
+        }
+
+        return _wrapped.GetPositionInBaseStream(baseStream, virtualPosition);
+    }
+
     public override bool CanRead => _wrapped.CanRead;
 
     public override bool CanSeek => _wrapped.CanSeek;

@@ -178,6 +178,16 @@ public abstract class SparseStream : CompatibilityStream
             _ownsWrapped = ownsWrapped;
         }
 
+        public override long? GetPositionInBaseStream(Stream baseStream, long virtualPosition)
+        {
+            if (ReferenceEquals(baseStream, this))
+            {
+                return virtualPosition;
+            }
+
+            return _wrapped.GetPositionInBaseStream(baseStream, virtualPosition);
+        }
+
         public override bool CanRead
         {
             get
@@ -329,6 +339,16 @@ public abstract class SparseStream : CompatibilityStream
             {
                 _extents = new List<StreamExtent>(extents);
             }
+        }
+
+        public override long? GetPositionInBaseStream(Stream baseStream, long virtualPosition)
+        {
+            if (ReferenceEquals(baseStream, this))
+            {
+                return virtualPosition;
+            }
+
+            return _wrapped.GetPositionInBaseStream(baseStream, virtualPosition);
         }
 
         public override bool CanRead

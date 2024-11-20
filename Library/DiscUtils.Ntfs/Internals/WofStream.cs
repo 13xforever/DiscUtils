@@ -146,7 +146,7 @@ internal class WofStream(long uncompressedSize,
     {
         if ((Position & (maxChunkSize - 1)) != 0)
         {
-            throw new ArgumentOutOfRangeException("Read not aligned to compression chunks");
+            throw new InvalidOperationException("Read not aligned to compression chunks");
         }
 
         var total = 0;
@@ -175,7 +175,7 @@ internal class WofStream(long uncompressedSize,
     {
         if ((Position & (maxChunkSize - 1)) != 0)
         {
-            throw new ArgumentOutOfRangeException("Read not aligned to compression chunks");
+            throw new InvalidOperationException("Read not aligned to compression chunks");
         }
 
         var total = 0;
@@ -204,7 +204,7 @@ internal class WofStream(long uncompressedSize,
     {
         if ((Position & (maxChunkSize - 1)) != 0)
         {
-            throw new ArgumentOutOfRangeException("Read not aligned to compression chunks");
+            throw new InvalidOperationException("Read not aligned to compression chunks");
         }
 
         var total = 0;

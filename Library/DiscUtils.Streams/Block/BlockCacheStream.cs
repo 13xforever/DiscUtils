@@ -822,10 +822,14 @@ public sealed class BlockCacheStream : SparseStream
 
     private void CheckDisposed()
     {
+#if NET7_0_OR_GREATER
+        ObjectDisposedException.ThrowIf(_wrappedStream is null, this);
+#else
         if (_wrappedStream == null)
         {
             throw new ObjectDisposedException("BlockCacheStream");
         }
+#endif
     }
 
     private void InvalidateBlocks(long firstBlock, int numBlocks)

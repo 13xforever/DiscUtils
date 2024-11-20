@@ -69,6 +69,26 @@ public class StripedStream : SparseStream
         _length = subStreamLength * _wrapped.Count;
     }
 
+    public override long? GetPositionInBaseStream(Stream baseStream, long virtualPosition)
+    {
+        if (ReferenceEquals(baseStream, this))
+        {
+            return virtualPosition;
+        }
+
+        var stripe = virtualPosition / _stripeSize;
+        var stripeOffset = virtualPosition % _stripeSize;
+
+        var streamIdx = (int)(stripe % _wrapped.Count);
+        var streamStripe = stripe / _wrapped.Count;
+
+        var targetStream = _wrapped[streamIdx];
+
+        var targetStreamPosition = streamStripe * _stripeSize + stripeOffset;
+
+        return targetStream.GetPositionInBaseStream(baseStream, targetStreamPosition);
+    }
+
     public override bool CanRead => _canRead;
 
     public override bool CanSeek => true;
@@ -116,7 +136,7 @@ public class StripedStream : SparseStream
             var streamIdx = (int)(stripe % _wrapped.Count);
             var streamStripe = stripe / _wrapped.Count;
 
-            Stream targetStream = _wrapped[streamIdx];
+            var targetStream = _wrapped[streamIdx];
             targetStream.Position = streamStripe * _stripeSize + stripeOffset;
 
             var numRead = targetStream.Read(buffer, offset + totalRead, stripeToRead);
@@ -146,7 +166,7 @@ public class StripedStream : SparseStream
             var streamIdx = (int)(stripe % _wrapped.Count);
             var streamStripe = stripe / _wrapped.Count;
 
-            Stream targetStream = _wrapped[streamIdx];
+            var targetStream = _wrapped[streamIdx];
             targetStream.Position = streamStripe * _stripeSize + stripeOffset;
 
             var numRead = await targetStream.ReadAsync(buffer.Slice(totalRead, stripeToRead), cancellationToken).ConfigureAwait(false);
@@ -238,7 +258,7 @@ public class StripedStream : SparseStream
             var streamIdx = (int)(stripe % _wrapped.Count);
             var streamStripe = stripe / _wrapped.Count;
 
-            Stream targetStream = _wrapped[streamIdx];
+            var targetStream = _wrapped[streamIdx];
             targetStream.Position = streamStripe * _stripeSize + stripeOffset;
             targetStream.Write(buffer, offset + totalWritten, stripeToWrite);
 
@@ -269,7 +289,7 @@ public class StripedStream : SparseStream
             var streamIdx = (int)(stripe % _wrapped.Count);
             var streamStripe = stripe / _wrapped.Count;
 
-            Stream targetStream = _wrapped[streamIdx];
+            var targetStream = _wrapped[streamIdx];
             targetStream.Position = streamStripe * _stripeSize + stripeOffset;
             await targetStream.WriteAsync(buffer.Slice(totalWritten, stripeToWrite), cancellationToken).ConfigureAwait(false);
 
@@ -300,7 +320,7 @@ public class StripedStream : SparseStream
             var streamIdx = (int)(stripe % _wrapped.Count);
             var streamStripe = stripe / _wrapped.Count;
 
-            Stream targetStream = _wrapped[streamIdx];
+            var targetStream = _wrapped[streamIdx];
             targetStream.Position = streamStripe * _stripeSize + stripeOffset;
             targetStream.Write(buffer.Slice(totalWritten, stripeToWrite));
 

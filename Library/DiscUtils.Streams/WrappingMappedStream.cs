@@ -54,6 +54,17 @@ public class WrappingMappedStream<T> : MappedStream
         }
     }
 
+    public override long? GetPositionInBaseStream(Stream baseStream, long virtualPosition)
+    {
+        if (ReferenceEquals(baseStream, this)
+            || WrappedStream is not CompatibilityStream baseCompatStream)
+        {
+            return virtualPosition;
+        }
+
+        return baseCompatStream.GetPositionInBaseStream(baseStream, virtualPosition);
+    }
+
     public override bool CanRead => WrappedStream.CanRead;
 
     public override bool CanSeek => WrappedStream.CanSeek;

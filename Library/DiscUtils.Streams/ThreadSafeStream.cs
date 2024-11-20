@@ -20,6 +20,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+using DiscUtils.Streams.Compatibility;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -87,10 +88,26 @@ public class ThreadSafeStream : SparseStream
     private ThreadSafeStream(ThreadSafeStream toClone)
     {
         _common = toClone._common;
+
+#if NET7_0_OR_GREATER
+        ObjectDisposedException.ThrowIf(_common is null, toClone);
+#else
         if (_common == null)
         {
             throw new ObjectDisposedException("toClone");
         }
+#endif
+    }
+
+    public override long? GetPositionInBaseStream(Stream baseStream, long virtualPosition)
+    {
+        if (ReferenceEquals(baseStream, this)
+            || _common.WrappedStream is not CompatibilityStream baseCompatStream)
+        {
+            return virtualPosition;
+        }
+
+        return baseCompatStream.GetPositionInBaseStream(baseStream, virtualPosition);
     }
 
     /// <summary>
@@ -169,8 +186,12 @@ public class ThreadSafeStream : SparseStream
     {
         get
         {
-            var wrapped = _common.WrappedStream ?? throw new ObjectDisposedException("ThreadSafeStream");
-            return wrapped;
+#if NET7_0_OR_GREATER
+            ObjectDisposedException.ThrowIf(_common.WrappedStream is null, this);
+            return _common.WrappedStream;
+#else
+            return _common.WrappedStream ?? throw new ObjectDisposedException("ThreadSafeStream");
+#endif
         }
     }
 

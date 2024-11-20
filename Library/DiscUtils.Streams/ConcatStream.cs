@@ -82,25 +82,38 @@ public class ConcatStream : SparseStream
         }
     }
 
+    public override long? GetPositionInBaseStream(Stream baseStream, long virtualPosition)
+    {
+        if (ReferenceEquals(baseStream, this))
+        {
+            return virtualPosition;
+        }
+
+        var activeStreamIndex = GetStream(virtualPosition, out var activeStreamStartPos);
+
+        var activeStream = _streams[activeStreamIndex];
+
+        var basePosition = virtualPosition - activeStreamStartPos;
+
+        return activeStream.GetPositionInBaseStream(baseStream, basePosition);
+    }
+
     public override IEnumerable<StreamExtent> Extents
     {
         get
         {
             CheckDisposed();
-            var extents = new List<StreamExtent>();
 
             long pos = 0;
             for (var i = 0; i < _streams.Count; ++i)
             {
                 foreach (var extent in _streams[i].Extents)
                 {
-                    extents.Add(new StreamExtent(extent.Start + pos, extent.Length));
+                    yield return new StreamExtent(extent.Start + pos, extent.Length);
                 }
 
                 pos += _streams[i].Length;
             }
-
-            return extents;
         }
     }
 
@@ -388,9 +401,13 @@ public class ConcatStream : SparseStream
 
     private void CheckDisposed()
     {
+#if NET7_0_OR_GREATER
+        ObjectDisposedException.ThrowIf(_streams is null, this);
+#else
         if (_streams == null)
         {
             throw new ObjectDisposedException("ConcatStream");
         }
+#endif
     }
 }

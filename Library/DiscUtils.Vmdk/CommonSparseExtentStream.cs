@@ -589,10 +589,14 @@ internal abstract class CommonSparseExtentStream : MappedStream
 
     protected void CheckDisposed()
     {
+#if NET7_0_OR_GREATER
+        ObjectDisposedException.ThrowIf(_fileStream is null, this);
+#else
         if (_fileStream == null)
         {
             throw new ObjectDisposedException("CommonSparseExtentStream");
         }
+#endif
     }
 
     private IEnumerable<StreamExtent> LayerExtents(long start, long count)

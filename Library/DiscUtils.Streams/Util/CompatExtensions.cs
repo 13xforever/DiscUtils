@@ -13,6 +13,21 @@ namespace DiscUtils.Streams.Compatibility;
 
 public abstract class CompatibilityStream : Stream
 {
+    /// <summary>
+    /// In a derived class, get corresponding position in a base stream of this instance
+    /// to a position in this instance.
+    /// </summary>
+    public virtual long? GetPositionInBaseStream(Stream baseStream, long virtualPosition)
+    {
+        if (baseStream is null
+            || ReferenceEquals(baseStream, this))
+        {
+            return virtualPosition;
+        }
+
+        return null;
+    }
+
     public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
 #if NET6_0_OR_GREATER
@@ -241,5 +256,29 @@ public static class CompatExtensions
     public static Task CopyToAsync(this Stream source, Stream target, CancellationToken cancellationToken)
         => source.CopyToAsync(target, bufferSize: 80 * 1024, cancellationToken);
 #endif
+
+    /// <summary>
+    /// If stream is derived from CompatibilityStream, get corresponding position in a base stream of this instance
+    /// to a position in this instance.
+    /// </summary>
+    public static long? GetPositionInBaseStream(this Stream stream, Stream baseStream, long virtualPosition)
+    {
+        if (ReferenceEquals(stream, baseStream))
+        {
+            return virtualPosition;
+        }
+
+        if (stream is CompatibilityStream compatBaseStream)
+        {
+            return compatBaseStream.GetPositionInBaseStream(baseStream, virtualPosition);
+        }
+
+        if (baseStream is null)
+        {
+            return virtualPosition;
+        }
+
+        return null;
+    }
 }
 

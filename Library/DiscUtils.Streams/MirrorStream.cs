@@ -20,6 +20,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+using DiscUtils.Streams.Compatibility;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -61,6 +62,16 @@ public class MirrorStream : SparseStream
                 throw new ArgumentException("All mirrored streams must have the same length", nameof(wrapped));
             }
         }
+    }
+
+    public override long? GetPositionInBaseStream(Stream baseStream, long virtualPosition)
+    {
+        if (ReferenceEquals(baseStream, this))
+        {
+            return virtualPosition;
+        }
+
+        return _wrapped[0].GetPositionInBaseStream(baseStream, virtualPosition);
     }
 
     public override bool CanRead => _canRead;

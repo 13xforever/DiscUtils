@@ -85,6 +85,21 @@ public class SubStream : MappedStream
         }
     }
 
+    public override long? GetPositionInBaseStream(Stream baseStream, long virtualPosition)
+    {
+        if (ReferenceEquals(baseStream, this))
+        {
+            return virtualPosition;
+        }
+
+        if (_parent is CompatibilityStream baseCompatStream)
+        {
+            return baseCompatStream.GetPositionInBaseStream(baseStream, _first + virtualPosition);
+        }
+
+        return _first + virtualPosition;
+    }
+
     public override long Length => _length;
 
     public override long Position

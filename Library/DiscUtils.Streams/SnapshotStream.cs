@@ -77,6 +77,17 @@ public sealed class SnapshotStream : SparseStream
         _diffExtents = [];
     }
 
+    public override long? GetPositionInBaseStream(Stream baseStream, long virtualPosition)
+    {
+        if (ReferenceEquals(baseStream, this)
+            || _baseStream is not CompatibilityStream baseCompatStream)
+        {
+            return virtualPosition;
+        }
+
+        return baseCompatStream.GetPositionInBaseStream(baseStream, virtualPosition);
+    }
+
     /// <summary>
     /// Gets an indication as to whether the stream can be read.
     /// </summary>
