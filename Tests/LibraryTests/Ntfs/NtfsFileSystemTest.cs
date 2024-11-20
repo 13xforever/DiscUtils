@@ -877,6 +877,12 @@ public class NtfsFileSystemTest
             file.Write(pattern);
         }
 
+        var firstExt = fs
+            .PathToExtents("Test.txt")
+            .FirstOrDefault();
+
+        Assert.NotEqual(0, firstExt.Start);
+
         long? locationOnDisk;
 
         Span<byte> buffer = stackalloc byte[pattern.Length];
@@ -892,7 +898,7 @@ public class NtfsFileSystemTest
         }
 
         Assert.NotNull(locationOnDisk);
-        Assert.NotEqual(0, locationOnDisk.Value);
+        Assert.Equal(firstExt.Start, locationOnDisk.Value);
 
         diskStream.Position = locationOnDisk.Value;
         buffer.Clear();
@@ -920,6 +926,12 @@ public class NtfsFileSystemTest
             file.Write(pattern);
         }
 
+        var firstExt = fs
+            .PathToExtents("Test.txt")
+            .FirstOrDefault();
+
+        Assert.NotEqual(0, firstExt.Start);
+
         long? locationOnDisk;
 
         var buffer = new byte[pattern.Length];
@@ -935,7 +947,7 @@ public class NtfsFileSystemTest
         }
 
         Assert.NotNull(locationOnDisk);
-        Assert.NotEqual(0, locationOnDisk.Value);
+        Assert.Equal(firstExt.Start, locationOnDisk.Value);
 
         diskStream.Position = locationOnDisk.Value;
         buffer.AsSpan().Clear();

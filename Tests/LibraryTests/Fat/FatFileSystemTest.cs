@@ -477,6 +477,12 @@ public class FatFileSystemTest
             file.Write(pattern);
         }
 
+        var firstExt = fs
+            .PathToExtents("Test.txt")
+            .FirstOrDefault();
+
+        Assert.NotEqual(0, firstExt.Start);
+
         long? locationOnDisk;
 
         Span<byte> buffer = stackalloc byte[pattern.Length];
@@ -492,7 +498,7 @@ public class FatFileSystemTest
         }
 
         Assert.NotNull(locationOnDisk);
-        Assert.NotEqual(0, locationOnDisk.Value);
+        Assert.Equal(firstExt.Start, locationOnDisk.Value);
 
         diskStream.Position = locationOnDisk.Value;
         buffer.Clear();

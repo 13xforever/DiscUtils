@@ -410,7 +410,13 @@ public sealed class FatFileSystem : DiscFileSystem, IDosFileSystem, IClusterBase
     }
 
     public IEnumerable<StreamExtent> PathToExtents(string path)
-        => PathToClusters(path).Select(range => new StreamExtent(range.Offset * ClusterSize, range.Count * ClusterSize));
+    {
+        var stream = (FatFileStream)OpenFile(path, FileMode.Open, FileAccess.Read);
+        
+        return stream
+            .EnumerateAllocatedClusters()
+            .Select(range => new StreamExtent(ClusterReader.GetBaseStreamPositionForCluster((uint)range.Offset), ClusterSize * range.Count));
+    }
 
     public IEnumerable<Range<long, long>> PathToClusters(string path)
     {

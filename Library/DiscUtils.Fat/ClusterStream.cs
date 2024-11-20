@@ -638,5 +638,10 @@ internal class ClusterStream : CompatibilityStream
             firstCluster = null;
             lastCluster = null;
         }
+
+        if (firstCluster.HasValue && lastCluster.HasValue)
+        {
+            yield return new(firstCluster.Value, lastCluster.Value - firstCluster.Value + 1);
+        }
     }
 }
