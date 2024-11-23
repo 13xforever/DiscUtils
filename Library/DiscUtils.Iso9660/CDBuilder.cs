@@ -287,205 +287,208 @@ public sealed class CDBuilder : StreamBuilder, IFileSystemBuilder
         var suppEncoding = _buildParams.UseJoliet ? Encoding.BigEndianUnicode : Encoding.ASCII;
 
         var primaryLocationTable = new Dictionary<BuildDirectoryMember, uint>();
-        var supplementaryLocationTable =
-            new Dictionary<BuildDirectoryMember, uint>();
+        
+        var supplementaryLocationTable = new Dictionary<BuildDirectoryMember, uint>();
 
-        var focus = DiskStart + 3 * IsoUtilities.SectorSize; // Primary, Supplementary, End (fixed at end...)
-        if (_bootEntry != null)
+        checked
         {
-            focus += IsoUtilities.SectorSize;
-        }
-
-        // ####################################################################
-        // # 0. Fix boot image location
-        // ####################################################################
-        long bootCatalogPos = 0;
-        if (_bootEntry != null)
-        {
-            // Boot catalog MUST be at beginning
-            bootCatalogPos = focus;
-            focus += IsoUtilities.SectorSize;
-            var bootImagePos = focus;
-            var realBootImage = PatchBootImage(_bootImage, (uint)(DiskStart / IsoUtilities.SectorSize),
-                (uint)(bootImagePos / IsoUtilities.SectorSize));
-            var bootImageExtent = new BuilderStreamExtent(focus, realBootImage);
-            fixedRegions.Add(bootImageExtent);
-            focus += MathUtilities.RoundUp(bootImageExtent.Length, IsoUtilities.SectorSize);
-
-            var bootCatalog = new byte[IsoUtilities.SectorSize];
-            var bve = new BootValidationEntry
+            var focus = DiskStart + 3 * IsoUtilities.SectorSize; // Primary, Supplementary, End (fixed at end...)
+            if (_bootEntry != null)
             {
-                ManfId = ManufacturerId
-            };
-            bve.WriteTo(bootCatalog, 0x00);
-            _bootEntry.ImageStart = (uint)MathUtilities.Ceil(bootImagePos, IsoUtilities.SectorSize);
-            if (_bootEntry.BootMediaType == BootDeviceEmulation.NoEmulation)
-            {
-                _bootEntry.SectorCount = (ushort)MathUtilities.Ceil(_bootImage.Length, Sizes.Sector);
-            }
-            else
-            {
-                _bootEntry.SectorCount = 1;
+                focus += IsoUtilities.SectorSize;
             }
 
-            _bootEntry.WriteTo(bootCatalog, 0x20);
-            fixedRegions.Add(new BuilderBufferExtent(bootCatalogPos, bootCatalog));
-
-            // Don't add to focus, we already skipped the length of the bootCatalog
-        }
-
-        // ####################################################################
-        // # 1. Fix file locations
-        // ####################################################################
-
-        // Find end of the file data, fixing the files in place as we go
-        foreach (var fi in _files)
-        {
-            if (TrackEqualSourceFiles && primaryLocationTable.TryGetValue(fi, out var existing_sector))
+            // ####################################################################
+            // # 0. Fix boot image location
+            // ####################################################################
+            long bootCatalogPos = 0;
+            if (_bootEntry != null)
             {
-                primaryLocationTable.Add(fi, existing_sector);
-                supplementaryLocationTable.Add(fi, existing_sector);
+                // Boot catalog MUST be at beginning
+                bootCatalogPos = focus;
+                focus += IsoUtilities.SectorSize;
+                var bootImagePos = focus;
+                var realBootImage = PatchBootImage(_bootImage, (uint)(DiskStart / IsoUtilities.SectorSize),
+                    (uint)(bootImagePos / IsoUtilities.SectorSize));
+                var bootImageExtent = new BuilderStreamExtent(focus, realBootImage);
+                fixedRegions.Add(bootImageExtent);
+                focus += MathUtilities.RoundUp(bootImageExtent.Length, IsoUtilities.SectorSize);
 
-                var existing_focus = existing_sector * IsoUtilities.SectorSize;
-
-                var extent = new FileExtent(fi, existing_focus);
-
-                // Only remember files of non-zero length (otherwise we'll stomp on a valid file)
-                if (extent.Length != 0)
+                var bootCatalog = new byte[IsoUtilities.SectorSize];
+                var bve = new BootValidationEntry
                 {
-                    fixedRegions.Add(extent);
+                    ManfId = ManufacturerId
+                };
+                bve.WriteTo(bootCatalog, 0x00);
+                _bootEntry.ImageStart = (uint)MathUtilities.Ceil(bootImagePos, IsoUtilities.SectorSize);
+                if (_bootEntry.BootMediaType == BootDeviceEmulation.NoEmulation)
+                {
+                    _bootEntry.SectorCount = (ushort)MathUtilities.Ceil(_bootImage.Length, Sizes.Sector);
                 }
-            }
-            else
-            {
-                var sector = (uint)(focus / IsoUtilities.SectorSize);
-
-                primaryLocationTable.Add(fi, sector);
-                supplementaryLocationTable.Add(fi, sector);
-                var extent = new FileExtent(fi, focus);
-
-                // Only remember files of non-zero length (otherwise we'll stomp on a valid file)
-                if (extent.Length != 0)
+                else
                 {
-                    fixedRegions.Add(extent);
+                    _bootEntry.SectorCount = 1;
                 }
 
+                _bootEntry.WriteTo(bootCatalog, 0x20);
+                fixedRegions.Add(new BuilderBufferExtent(bootCatalogPos, bootCatalog));
+
+                // Don't add to focus, we already skipped the length of the bootCatalog
+            }
+
+            // ####################################################################
+            // # 1. Fix file locations
+            // ####################################################################
+
+            // Find end of the file data, fixing the files in place as we go
+            foreach (var fi in _files)
+            {
+                if (TrackEqualSourceFiles && primaryLocationTable.TryGetValue(fi, out var existing_sector))
+                {
+                    primaryLocationTable.Add(fi, existing_sector);
+                    supplementaryLocationTable.Add(fi, existing_sector);
+
+                    var existing_focus = existing_sector * IsoUtilities.SectorSize;
+
+                    var extent = new FileExtent(fi, existing_focus);
+
+                    // Only remember files of non-zero length (otherwise we'll stomp on a valid file)
+                    if (extent.Length != 0)
+                    {
+                        fixedRegions.Add(extent);
+                    }
+                }
+                else
+                {
+                    var sector = (uint)(focus / IsoUtilities.SectorSize);
+
+                    primaryLocationTable.Add(fi, sector);
+                    supplementaryLocationTable.Add(fi, sector);
+                    var extent = new FileExtent(fi, focus);
+
+                    // Only remember files of non-zero length (otherwise we'll stomp on a valid file)
+                    if (extent.Length != 0)
+                    {
+                        fixedRegions.Add(extent);
+                    }
+
+                    focus += MathUtilities.RoundUp(extent.Length, IsoUtilities.SectorSize);
+                }
+            }
+
+            // ####################################################################
+            // # 2. Fix directory locations
+            // ####################################################################
+
+            // There are two directory tables
+            //  1. Primary        (std ISO9660)
+            //  2. Supplementary  (Joliet)
+
+            // Find start of the second set of directory data, fixing ASCII directories in place.
+            var startOfFirstDirData = focus;
+            foreach (var di in _dirs)
+            {
+                primaryLocationTable.Add(di, (uint)(focus / IsoUtilities.SectorSize));
+                var extent = new DirectoryExtent(di, primaryLocationTable, Encoding.ASCII, focus);
+                fixedRegions.Add(extent);
                 focus += MathUtilities.RoundUp(extent.Length, IsoUtilities.SectorSize);
             }
-        }
 
-        // ####################################################################
-        // # 2. Fix directory locations
-        // ####################################################################
+            // Find end of the second directory table, fixing supplementary directories in place.
+            var startOfSecondDirData = focus;
+            foreach (var di in _dirs)
+            {
+                supplementaryLocationTable.Add(di, (uint)(focus / IsoUtilities.SectorSize));
+                var extent = new DirectoryExtent(di, supplementaryLocationTable, suppEncoding, focus);
+                fixedRegions.Add(extent);
+                focus += MathUtilities.RoundUp(extent.Length, IsoUtilities.SectorSize);
+            }
 
-        // There are two directory tables
-        //  1. Primary        (std ISO9660)
-        //  2. Supplementary  (Joliet)
+            // ####################################################################
+            // # 3. Fix path tables
+            // ####################################################################
 
-        // Find start of the second set of directory data, fixing ASCII directories in place.
-        var startOfFirstDirData = focus;
-        foreach (var di in _dirs)
-        {
-            primaryLocationTable.Add(di, (uint)(focus / IsoUtilities.SectorSize));
-            var extent = new DirectoryExtent(di, primaryLocationTable, Encoding.ASCII, focus);
-            fixedRegions.Add(extent);
-            focus += MathUtilities.RoundUp(extent.Length, IsoUtilities.SectorSize);
-        }
+            // There are four path tables:
+            //  1. LE, ASCII
+            //  2. BE, ASCII
+            //  3. LE, Supp Encoding (Joliet)
+            //  4. BE, Supp Encoding (Joliet)
 
-        // Find end of the second directory table, fixing supplementary directories in place.
-        var startOfSecondDirData = focus;
-        foreach (var di in _dirs)
-        {
-            supplementaryLocationTable.Add(di, (uint)(focus / IsoUtilities.SectorSize));
-            var extent = new DirectoryExtent(di, supplementaryLocationTable, suppEncoding, focus);
-            fixedRegions.Add(extent);
-            focus += MathUtilities.RoundUp(extent.Length, IsoUtilities.SectorSize);
-        }
+            // Find end of the path table
+            var startOfFirstPathTable = focus;
+            var pathTable = new PathTable(byteSwap: false, Encoding.ASCII, _dirs, primaryLocationTable, focus);
+            fixedRegions.Add(pathTable);
+            focus += MathUtilities.RoundUp(pathTable.Length, IsoUtilities.SectorSize);
+            var primaryPathTableLength = pathTable.Length;
 
-        // ####################################################################
-        // # 3. Fix path tables
-        // ####################################################################
+            var startOfSecondPathTable = focus;
+            pathTable = new PathTable(byteSwap: true, Encoding.ASCII, _dirs, primaryLocationTable, focus);
+            fixedRegions.Add(pathTable);
+            focus += MathUtilities.RoundUp(pathTable.Length, IsoUtilities.SectorSize);
 
-        // There are four path tables:
-        //  1. LE, ASCII
-        //  2. BE, ASCII
-        //  3. LE, Supp Encoding (Joliet)
-        //  4. BE, Supp Encoding (Joliet)
+            var startOfThirdPathTable = focus;
+            pathTable = new PathTable(byteSwap: false, suppEncoding, _dirs, supplementaryLocationTable, focus);
+            fixedRegions.Add(pathTable);
+            focus += MathUtilities.RoundUp(pathTable.Length, IsoUtilities.SectorSize);
+            var supplementaryPathTableLength = pathTable.Length;
 
-        // Find end of the path table
-        var startOfFirstPathTable = focus;
-        var pathTable = new PathTable(false, Encoding.ASCII, _dirs, primaryLocationTable, focus);
-        fixedRegions.Add(pathTable);
-        focus += MathUtilities.RoundUp(pathTable.Length, IsoUtilities.SectorSize);
-        var primaryPathTableLength = pathTable.Length;
+            var startOfFourthPathTable = focus;
+            pathTable = new PathTable(byteSwap: true, suppEncoding, _dirs, supplementaryLocationTable, focus);
+            fixedRegions.Add(pathTable);
+            focus += MathUtilities.RoundUp(pathTable.Length, IsoUtilities.SectorSize);
 
-        var startOfSecondPathTable = focus;
-        pathTable = new PathTable(true, Encoding.ASCII, _dirs, primaryLocationTable, focus);
-        fixedRegions.Add(pathTable);
-        focus += MathUtilities.RoundUp(pathTable.Length, IsoUtilities.SectorSize);
+            // Find the end of the disk
+            totalLength = focus;
 
-        var startOfThirdPathTable = focus;
-        pathTable = new PathTable(false, suppEncoding, _dirs, supplementaryLocationTable, focus);
-        fixedRegions.Add(pathTable);
-        focus += MathUtilities.RoundUp(pathTable.Length, IsoUtilities.SectorSize);
-        var supplementaryPathTableLength = pathTable.Length;
-
-        var startOfFourthPathTable = focus;
-        pathTable = new PathTable(true, suppEncoding, _dirs, supplementaryLocationTable, focus);
-        fixedRegions.Add(pathTable);
-        focus += MathUtilities.RoundUp(pathTable.Length, IsoUtilities.SectorSize);
-
-        // Find the end of the disk
-        totalLength = focus;
-
-        // ####################################################################
-        // # 4. Prepare volume descriptors now other structures are fixed
-        // ####################################################################
-        var regionIdx = 0;
-        focus = DiskStart;
-        var pvDesc = new PrimaryVolumeDescriptor(
-            (uint)(totalLength / IsoUtilities.SectorSize), // VolumeSpaceSize
-            (uint)primaryPathTableLength, // PathTableSize
-            (uint)(startOfFirstPathTable / IsoUtilities.SectorSize), // TypeLPathTableLocation
-            (uint)(startOfSecondPathTable / IsoUtilities.SectorSize), // TypeMPathTableLocation
-            (uint)(startOfFirstDirData / IsoUtilities.SectorSize), // RootDirectory.LocationOfExtent
-            (uint)_rootDirectory.GetDataSize(Encoding.ASCII), // RootDirectory.DataLength
-            buildTime)
-        {
-            VolumeIdentifier = _buildParams.VolumeIdentifier
-        };
-        var pvdr = new PrimaryVolumeDescriptorRegion(pvDesc, focus);
-        fixedRegions.Insert(regionIdx++, pvdr);
-        focus += IsoUtilities.SectorSize;
-
-        if (_bootEntry != null)
-        {
-            var bvDesc = new BootVolumeDescriptor(
-                (uint)(bootCatalogPos / IsoUtilities.SectorSize));
-            var bvdr = new BootVolumeDescriptorRegion(bvDesc, focus);
-            fixedRegions.Insert(regionIdx++, bvdr);
+            // ####################################################################
+            // # 4. Prepare volume descriptors now other structures are fixed
+            // ####################################################################
+            var regionIdx = 0;
+            focus = DiskStart;
+            var pvDesc = new PrimaryVolumeDescriptor(
+                (uint)(totalLength / IsoUtilities.SectorSize), // VolumeSpaceSize
+                (uint)primaryPathTableLength, // PathTableSize
+                (uint)(startOfFirstPathTable / IsoUtilities.SectorSize), // TypeLPathTableLocation
+                (uint)(startOfSecondPathTable / IsoUtilities.SectorSize), // TypeMPathTableLocation
+                (uint)(startOfFirstDirData / IsoUtilities.SectorSize), // RootDirectory.LocationOfExtent
+                (uint)_rootDirectory.GetDataSize(Encoding.ASCII), // RootDirectory.DataLength
+                buildTime)
+            {
+                VolumeIdentifier = _buildParams.VolumeIdentifier
+            };
+            var pvdr = new PrimaryVolumeDescriptorRegion(pvDesc, focus);
+            fixedRegions.Insert(regionIdx++, pvdr);
             focus += IsoUtilities.SectorSize;
+
+            if (_bootEntry != null)
+            {
+                var bvDesc = new BootVolumeDescriptor(
+                    (uint)(bootCatalogPos / IsoUtilities.SectorSize));
+                var bvdr = new BootVolumeDescriptorRegion(bvDesc, focus);
+                fixedRegions.Insert(regionIdx++, bvdr);
+                focus += IsoUtilities.SectorSize;
+            }
+
+            var svDesc = new SupplementaryVolumeDescriptor(
+                (uint)(totalLength / IsoUtilities.SectorSize), // VolumeSpaceSize
+                (uint)supplementaryPathTableLength, // PathTableSize
+                (uint)(startOfThirdPathTable / IsoUtilities.SectorSize), // TypeLPathTableLocation
+                (uint)(startOfFourthPathTable / IsoUtilities.SectorSize), // TypeMPathTableLocation
+                (uint)(startOfSecondDirData / IsoUtilities.SectorSize), // RootDirectory.LocationOfExtent
+                (uint)_rootDirectory.GetDataSize(suppEncoding), // RootDirectory.DataLength
+                buildTime,
+                suppEncoding)
+            {
+                VolumeIdentifier = _buildParams.VolumeIdentifier
+            };
+            var svdr = new SupplementaryVolumeDescriptorRegion(svDesc, focus);
+            fixedRegions.Insert(regionIdx++, svdr);
+            focus += IsoUtilities.SectorSize;
+
+            var evDesc = new VolumeDescriptorSetTerminator();
+            var evdr = new VolumeDescriptorSetTerminatorRegion(evDesc, focus);
+            fixedRegions.Insert(regionIdx++, evdr);
         }
-
-        var svDesc = new SupplementaryVolumeDescriptor(
-            (uint)(totalLength / IsoUtilities.SectorSize), // VolumeSpaceSize
-            (uint)supplementaryPathTableLength, // PathTableSize
-            (uint)(startOfThirdPathTable / IsoUtilities.SectorSize), // TypeLPathTableLocation
-            (uint)(startOfFourthPathTable / IsoUtilities.SectorSize), // TypeMPathTableLocation
-            (uint)(startOfSecondDirData / IsoUtilities.SectorSize), // RootDirectory.LocationOfExtent
-            (uint)_rootDirectory.GetDataSize(suppEncoding), // RootDirectory.DataLength
-            buildTime,
-            suppEncoding)
-        {
-            VolumeIdentifier = _buildParams.VolumeIdentifier
-        };
-        var svdr = new SupplementaryVolumeDescriptorRegion(svDesc, focus);
-        fixedRegions.Insert(regionIdx++, svdr);
-        focus += IsoUtilities.SectorSize;
-
-        var evDesc = new VolumeDescriptorSetTerminator();
-        var evdr = new VolumeDescriptorSetTerminatorRegion(evDesc, focus);
-        fixedRegions.Insert(regionIdx++, evdr);
 
         return fixedRegions;
     }
@@ -564,7 +567,7 @@ public sealed class CDBuilder : StreamBuilder, IFileSystemBuilder
     private void CheckDirectoryForFilePath(string name, out ReadOnlyMemory<char>[] nameElements, out BuildDirectoryInfo dir)
     {
         nameElements = name.AsMemory().TokenEnum('\\', '/', StringSplitOptions.RemoveEmptyEntries).ToArray();
-        dir = GetDirectory(nameElements, nameElements.Length - 1, true);
+        dir = GetDirectory(nameElements, nameElements.Length - 1, createMissing: true);
 
         if (dir.TryGetMember(nameElements[nameElements.Length - 1].ToString(), out _))
         {
@@ -586,12 +589,14 @@ public sealed class CDBuilder : StreamBuilder, IFileSystemBuilder
 
         for (var i = 0; i < pathLength; ++i)
         {
-            if (!focus.TryGetMember(path[i].ToString(), out var next))
+            var name = path[i].ToString();
+
+            if (!focus.TryGetMember(name, out var next))
             {
                 if (createMissing)
                 {
                     // This directory doesn't exist, create it...
-                    var di = new BuildDirectoryInfo(path[i].ToString(), focus);
+                    var di = new BuildDirectoryInfo(name, focus);
                     focus.Add(di);
                     _dirs.Add(di);
                     focus = di;

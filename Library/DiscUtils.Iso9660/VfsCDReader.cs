@@ -466,7 +466,7 @@ internal class VfsCDReader : VfsReadOnlyFileSystem<ReaderDirEntry, File, ReaderD
 
         var totalSectors = bpbTotSec16 + bpbTotSec32;
         // Can't be greater than unsigned short
-        if (totalSectors > 65535)
+        if (totalSectors > ushort.MaxValue)
         {
             return 0;
         }

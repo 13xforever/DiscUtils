@@ -253,7 +253,7 @@ str[i] is not (>= '0' and <= '9' or >= 'A' and <= 'Z' or '_' or
     internal static string NormalizeFileName(string name)
     {
         var parts = SplitFileName(name);
-        return parts[0] + '.' + parts[1] + ';' + parts[2];
+        return $"{parts[0]}.{parts[1]};{parts[2]}";
     }
 
     internal static string[] SplitFileName(string name)

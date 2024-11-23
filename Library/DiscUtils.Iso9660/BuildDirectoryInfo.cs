@@ -100,7 +100,7 @@ public sealed class BuildDirectoryInfo : BuildDirectoryMember
     {
         var nameBytes = enc.GetByteCount(PickName(null, enc));
 
-        return (uint)(8 + nameBytes + ((nameBytes & 0x1) == 1 ? 1 : 0));
+        return checked((uint)(8 + nameBytes + ((nameBytes & 0x1) == 1 ? 1 : 0)));
     }
 
     internal int Write(Span<byte> buffer, Dictionary<BuildDirectoryMember, uint> locationTable, Encoding enc)

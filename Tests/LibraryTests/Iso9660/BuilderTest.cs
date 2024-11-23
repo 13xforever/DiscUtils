@@ -20,6 +20,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+using System;
 using System.IO;
 using DiscUtils;
 using DiscUtils.Iso9660;
@@ -90,5 +91,17 @@ public class BuilderTest
 
         Assert.Equal(BootDeviceEmulation.HardDisk, fs.BootEmulation);
         Assert.Equal(0x543, fs.BootLoadSegment);
+    }
+
+    [Fact]
+    public void LongPathTest()
+    {
+        const string testPath = @"Layout\Microsoft.VisualStudio.Debugger.Concord.Remote.Resources,version=17.12.35504.99,chip=x64,language=en-US,productarch=neutral,machinearch=ARM64\payload.vsix";
+
+        var builder = new CDBuilder();
+
+        builder.AddFile(testPath, System.Array.Empty<byte>());
+
+        Assert.Throws<InvalidOperationException>(() => builder.Build(new MemoryStream()));
     }
 }
