@@ -187,10 +187,10 @@ internal class FileContentBuffer : Streams.Buffer
         var fragTable = (int)_inode.FragmentKey / fragRecordsPerBlock;
         var recordOffset = (int)(_inode.FragmentKey % fragRecordsPerBlock) * FragmentRecord.RecordSize;
 
-        var fragRecordData = new byte[FragmentRecord.RecordSize];
+        Span<byte> fragRecordData = stackalloc byte[FragmentRecord.RecordSize];
 
         _context.FragmentTableReaders[fragTable].SetPosition(0, recordOffset);
-        _context.FragmentTableReaders[fragTable].Read(fragRecordData, 0, fragRecordData.Length);
+        _context.FragmentTableReaders[fragTable].Read(fragRecordData);
 
         var fragRecord = new FragmentRecord();
         fragRecord.ReadFrom(fragRecordData);
@@ -214,10 +214,10 @@ internal class FileContentBuffer : Streams.Buffer
         var fragTable = (int)_inode.FragmentKey / fragRecordsPerBlock;
         var recordOffset = (int)(_inode.FragmentKey % fragRecordsPerBlock) * FragmentRecord.RecordSize;
 
-        var fragRecordData = new byte[FragmentRecord.RecordSize];
+        Span<byte> fragRecordData = stackalloc byte[FragmentRecord.RecordSize];
 
         _context.FragmentTableReaders[fragTable].SetPosition(0, recordOffset);
-        _context.FragmentTableReaders[fragTable].Read(fragRecordData, 0, fragRecordData.Length);
+        _context.FragmentTableReaders[fragTable].Read(fragRecordData);
 
         var fragRecord = new FragmentRecord();
         fragRecord.ReadFrom(fragRecordData);

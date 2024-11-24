@@ -51,7 +51,7 @@ internal class IntegerElementValue : ElementValue
 
     internal byte[] GetBytes()
     {
-        var bytes = new byte[8];
+        var bytes = StreamUtilities.GetUninitializedArray<byte>(sizeof(ulong));
         EndianUtilities.WriteBytesLittleEndian(_value, bytes, 0);
         return bytes;
     }

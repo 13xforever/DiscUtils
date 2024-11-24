@@ -24,6 +24,7 @@
 // Based on "libbzip2", Copyright (C) 1996-2007 Julian R Seward.
 //
 
+using DiscUtils.Streams;
 using System.IO;
 
 namespace DiscUtils.Compression;
@@ -76,7 +77,7 @@ internal class BZip2CombinedHuffmanTrees
             throw new InvalidDataException("Invalid number of selectors");
         }
 
-        _selectors = new byte[numSelectors];
+        _selectors = StreamUtilities.GetUninitializedArray<byte>(numSelectors);
         var mtf = new MoveToFront(numTrees, true);
         for (var i = 0; i < numSelectors; ++i)
         {

@@ -27,13 +27,13 @@ internal static class MemoryStreamHelper
 {
     public static MemoryStream CreateWithFixedCapacity(int capacity)
     {
-#if NET6_0_OR_GREATER
+#if NET5_0_OR_GREATER
         var array = GC.AllocateUninitializedArray<byte>(capacity);
 #else
 
         var array = new byte[capacity];
 #endif
-        return new MemoryStream(array, 0, capacity, true, true);
+        return new MemoryStream(array, 0, capacity, writable: true, publiclyVisible: true);
     }
 
     public static MemoryStream Initialize(MemoryStream stream)

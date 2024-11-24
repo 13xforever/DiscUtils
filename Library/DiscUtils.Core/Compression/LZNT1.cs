@@ -300,7 +300,7 @@ internal sealed class LZNT1 : BlockCompressor
 
     private static byte[] CalcCompressionBits()
     {
-        var result = new byte[4096];
+        var result = StreamUtilities.GetUninitializedArray<byte>(4096);
         byte offsetBits = 0;
 
         var y = 0x10;

@@ -138,25 +138,32 @@ internal class MasterFileTable : IDiagnosticTraceable, IDisposable
     {
         get
         {
-            using Stream mftStream = _self.OpenStream(AttributeType.Data, null, FileAccess.Read);
+            using var mftStream = _self.OpenStream(AttributeType.Data, null, FileAccess.Read);
             uint index = 0;
-            var recordData = new byte[RecordSize];
-            while (mftStream.Position < mftStream.Length)
+            var recordData = ArrayPool<byte>.Shared.Rent(RecordSize);
+            try
             {
-                mftStream.ReadExactly(recordData);
-
-                if (EndianUtilities.ToInt32LittleEndian(recordData, 0) != FILE_MAGIC)
+                while (mftStream.Position < mftStream.Length)
                 {
-                    continue;
+                    mftStream.ReadExactly(recordData, 0, RecordSize);
+
+                    if (EndianUtilities.ToInt32LittleEndian(recordData, 0) != FILE_MAGIC)
+                    {
+                        continue;
+                    }
+
+                    var record = new FileRecord(_bytesPerSector);
+                    record.FromBytes(recordData);
+                    record.LoadedIndex = index;
+
+                    yield return record;
+
+                    index++;
                 }
-
-                var record = new FileRecord(_bytesPerSector);
-                record.FromBytes(recordData);
-                record.LoadedIndex = index;
-
-                yield return record;
-
-                index++;
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(recordData);
             }
         }
     }

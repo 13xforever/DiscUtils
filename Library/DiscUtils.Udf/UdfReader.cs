@@ -63,7 +63,7 @@ public sealed class UdfReader : VfsFileSystemFacade
 
         long vdpos = 0x8000; // Skip lead-in
 
-        var buffer = new byte[IsoUtilities.SectorSize];
+        Span<byte> buffer = stackalloc byte[IsoUtilities.SectorSize];
 
         var validDescriptor = true;
         var foundUdfMarker = false;
@@ -72,7 +72,7 @@ public sealed class UdfReader : VfsFileSystemFacade
         while (validDescriptor)
         {
             data.Position = vdpos;
-            var numRead = data.ReadMaximum(buffer, 0, IsoUtilities.SectorSize);
+            var numRead = data.ReadMaximum(buffer);
             if (numRead != IsoUtilities.SectorSize)
             {
                 break;

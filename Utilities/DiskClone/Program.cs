@@ -181,17 +181,9 @@ class Program : ProgramBase
                     ntfs.DeleteFile(@"\hiberfil.sys");
                 }
 
-                using (Stream bitmapStream = ntfs.OpenFile(@"$Bitmap", FileMode.Open))
+                using (var bitmapStream = ntfs.OpenFile(@"$Bitmap", FileMode.Open))
                 {
-                    volBitmap = new byte[bitmapStream.Length];
-
-                    var totalRead = 0;
-                    var numRead = bitmapStream.Read(volBitmap, 0, volBitmap.Length - totalRead);
-                    while (numRead > 0)
-                    {
-                        totalRead += numRead;
-                        numRead = bitmapStream.Read(volBitmap, totalRead, volBitmap.Length - totalRead);
-                    }
+                    volBitmap = bitmapStream.ReadExactly((int)bitmapStream.Length);
                 }
 
                 clusterSize = (int)ntfs.ClusterSize;

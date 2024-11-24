@@ -20,6 +20,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+using DiscUtils.Streams;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -65,8 +66,8 @@ public sealed class TextRecord : ResourceRecord
 
         if (i < value.Length)
         {
-            var data = new byte[value.Length - (i + 1)];
-            Buffer.BlockCopy(value, i + 1, data, 0, data.Length);
+            var data = StreamUtilities.GetUninitializedArray<byte>(value.Length - (i + 1));
+            System.Buffer.BlockCopy(value, i + 1, data, 0, data.Length);
             Values[Encoding.ASCII.GetString(value, 0, i)] = data;
         }
         else

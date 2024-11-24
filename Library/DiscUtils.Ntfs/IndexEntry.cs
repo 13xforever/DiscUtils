@@ -116,18 +116,18 @@ internal sealed class IndexEntry
 
         if ((_flags & IndexEntryFlags.End) == 0)
         {
-            _keyBuffer = new byte[keyLength];
+            _keyBuffer = StreamUtilities.GetUninitializedArray<byte>(keyLength);
             buffer.Slice(0x10, keyLength).CopyTo(_keyBuffer);
 
             if (IsFileIndexEntry)
             {
                 // Special case, for file indexes, the MFT ref is held where the data offset & length go
-                _dataBuffer = new byte[8];
+                _dataBuffer = StreamUtilities.GetUninitializedArray<byte>(8);
                 buffer.Slice(0x00, 8).CopyTo(_dataBuffer);
             }
             else
             {
-                _dataBuffer = new byte[dataLength];
+                _dataBuffer = StreamUtilities.GetUninitializedArray<byte>(dataLength);
                 buffer.Slice(0x10 + keyLength, dataLength).CopyTo(_dataBuffer);
             }
         }

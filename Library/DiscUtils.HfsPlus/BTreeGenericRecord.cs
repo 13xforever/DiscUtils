@@ -20,6 +20,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+using DiscUtils.Streams;
 using System;
 
 namespace DiscUtils.HfsPlus;
@@ -38,7 +39,7 @@ internal class BTreeGenericRecord : BTreeNodeRecord
 
     public override int ReadFrom(ReadOnlySpan<byte> buffer)
     {
-        _data = new byte[_size];
+        _data = StreamUtilities.GetUninitializedArray<byte>(_size);
         buffer.Slice(0, _size).CopyTo(_data);
         return _size;
     }

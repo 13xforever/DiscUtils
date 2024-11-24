@@ -21,6 +21,7 @@
 //
 
 using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -88,16 +89,23 @@ internal sealed class FileContentReaderWriter : IContentWriter, IContentReader
 
                 var maxToRead = (int)Math.Min(Math.Min(readCount, _contentStream.Length - _contentStream.Position), int.MaxValue);
 
-                var fileContent = new byte[maxToRead];
-                var numRead = _contentStream.Read(fileContent, 0, maxToRead);
-
-                var result = new object[numRead];
-                for (var i = 0; i < numRead; ++i)
+                var fileContent = ArrayPool<byte>.Shared.Rent(maxToRead);
+                try
                 {
-                    result[i] = fileContent[i];
-                }
+                    var numRead = _contentStream.Read(fileContent, 0, maxToRead);
 
-                return result;
+                    var result = new object[numRead];
+                    for (var i = 0; i < numRead; ++i)
+                    {
+                        result[i] = fileContent[i];
+                    }
+
+                    return result;
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(fileContent);
+                }
             }
             else
             {
@@ -144,15 +152,28 @@ internal sealed class FileContentReaderWriter : IContentWriter, IContentReader
                 return content;
             }
 
-            if (content[0].GetType() == typeof(byte))
+            if (content is byte[] bytes)
             {
-                var buffer = new byte[content.Count];
-                for (var i = 0; i < buffer.Length; ++i)
-                {
-                    buffer[i] = (byte)content[i];
-                }
+                _contentStream.Write(bytes, 0, bytes.Length);
 
-                _contentStream.Write(buffer, 0, buffer.Length);
+                return content;
+            }
+            else if (content[0].GetType() == typeof(byte))
+            {
+                var buffer = ArrayPool<byte>.Shared.Rent(content.Count);
+                try
+                {
+                    for (var i = 0; i < content.Count; ++i)
+                    {
+                        buffer[i] = (byte)content[i];
+                    }
+
+                    _contentStream.Write(buffer, 0, content.Count);
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(buffer);
+                }
                 return content;
             }
             else if ((content[0] as string) != null)

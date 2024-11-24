@@ -125,7 +125,7 @@ public sealed class DiskImageFile : VirtualDiskLayer
         var preHeader = PreHeaderRecord.Initialized();
         var header = HeaderRecord.Initialized(ImageType.Fixed, ImageFlags.None, capacity, 1024 * 1024, 0);
 
-        var blockTable = new byte[header.BlockCount * 4];
+        var blockTable = StreamUtilities.GetUninitializedArray<byte>(header.BlockCount * 4);
         for (var i = 0; i < header.BlockCount; ++i)
         {
             EndianUtilities.WriteBytesLittleEndian((uint)i, blockTable, i * 4);
@@ -161,7 +161,7 @@ public sealed class DiskImageFile : VirtualDiskLayer
         var preHeader = PreHeaderRecord.Initialized();
         var header = HeaderRecord.Initialized(ImageType.Dynamic, ImageFlags.None, capacity, 1024 * 1024, 0);
 
-        var blockTable = new byte[header.BlockCount * 4];
+        var blockTable = StreamUtilities.GetUninitializedArray<byte>(header.BlockCount * 4);
         for (var i = 0; i < blockTable.Length; ++i)
         {
             blockTable[i] = 0xFF;

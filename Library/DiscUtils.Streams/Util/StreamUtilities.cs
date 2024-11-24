@@ -31,6 +31,20 @@ namespace DiscUtils.Streams;
 
 public static class StreamUtilities
 {
+    public static T[] GetUninitializedArray<T>(int length) where T : unmanaged
+    {
+        if (length == 0)
+        {
+            return [];
+        }
+
+#if NET5_0_OR_GREATER
+        return GC.AllocateUninitializedArray<T>(length);
+#else
+        return new T[length];
+#endif
+    }
+
     /// <summary>
     /// Validates standard buffer, offset, count parameters to a method.
     /// </summary>
@@ -151,7 +165,7 @@ public static class StreamUtilities
     /// <returns>The data read from the stream.</returns>
     public static byte[] ReadExactly(this Stream stream, int count)
     {
-        var buffer = new byte[count];
+        var buffer = GetUninitializedArray<byte>(count);
 
         stream.ReadExactly(buffer, 0, count);
 
@@ -167,7 +181,7 @@ public static class StreamUtilities
     /// <returns>The data read from the stream.</returns>
     public static async ValueTask<byte[]> ReadExactlyAsync(this Stream stream, int count, CancellationToken cancellationToken)
     {
-        var buffer = new byte[count];
+        var buffer = GetUninitializedArray<byte>(count);
 
         await stream.ReadExactlyAsync(buffer, cancellationToken).ConfigureAwait(false);
 
@@ -259,7 +273,7 @@ public static class StreamUtilities
     /// <returns>The data read from the stream.</returns>
     public static byte[] ReadExactly(this IBuffer buffer, long pos, int count)
     {
-        var result = new byte[count];
+        var result = GetUninitializedArray<byte>(count);
 
         ReadExactly(buffer, pos, result, 0, count);
 
@@ -276,7 +290,7 @@ public static class StreamUtilities
     /// <returns>The data read from the stream.</returns>
     public static async ValueTask<byte[]> ReadExactlyAsync(this IBuffer buffer, long pos, int count, CancellationToken cancellationToken)
     {
-        var result = new byte[count];
+        var result = GetUninitializedArray<byte>(count);
 
         await ReadExactlyAsync(buffer, pos, result, cancellationToken).ConfigureAwait(false);
 

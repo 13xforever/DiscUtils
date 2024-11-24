@@ -20,6 +20,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+using DiscUtils.Streams;
 using System;
 
 namespace DiscUtils.Ntfs;
@@ -38,8 +39,9 @@ internal sealed class GenericFixupRecord : FixupRecordBase
 
     protected override void Read(ReadOnlySpan<byte> buffer)
     {
-        Content = new byte[(UpdateSequenceCount - 1) * _bytesPerSector];
-        buffer.Slice(0, Content.Length).CopyTo(Content);
+        var newContent = StreamUtilities.GetUninitializedArray<byte>((UpdateSequenceCount - 1) * _bytesPerSector);
+        buffer.Slice(0, newContent.Length).CopyTo(newContent);
+        Content = newContent;
     }
 
     protected override ushort Write(Span<byte> buffer)

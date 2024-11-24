@@ -21,6 +21,7 @@
 //
 
 using System;
+using System.Buffers;
 using System.IO;
 using System.Linq;
 using DiscUtils;
@@ -206,16 +207,23 @@ class Program : ProgramBase
         return parentPath + Path.DirectorySeparatorChar + fna.FileName;
     }
 
-    private static void Pump(IBuffer inBuffer, Stream outStream)
+    private static void Pump(IBuffer inBuffer, FileStream outStream)
     {
         long inPos = 0;
-        var buffer = new byte[4096];
-        var bytesRead = inBuffer.Read(inPos, buffer, 0, 4096);
-        while (bytesRead != 0 && inPos < inBuffer.Capacity)
+        var buffer = ArrayPool<byte>.Shared.Rent(4096);
+        try
         {
-            inPos += bytesRead;
-            outStream.Write(buffer, 0, bytesRead);
-            bytesRead = inBuffer.Read(inPos, buffer, 0, 4096);
+            var bytesRead = inBuffer.Read(inPos, buffer, 0, 4096);
+            while (bytesRead != 0 && inPos < inBuffer.Capacity)
+            {
+                inPos += bytesRead;
+                outStream.Write(buffer, 0, bytesRead);
+                bytesRead = inBuffer.Read(inPos, buffer, 0, 4096);
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
         }
     }
 }

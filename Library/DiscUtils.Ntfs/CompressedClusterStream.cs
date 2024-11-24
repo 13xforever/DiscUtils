@@ -49,8 +49,8 @@ internal sealed class CompressedClusterStream : ClusterStream
         _rawStream = rawStream;
         _bytesPerCluster = _context.BiosParameterBlock.BytesPerCluster;
 
-        _cacheBuffer = new byte[_attr.CompressionUnitSize * context.BiosParameterBlock.BytesPerCluster];
-        _ioBuffer = new byte[_attr.CompressionUnitSize * context.BiosParameterBlock.BytesPerCluster];
+        _cacheBuffer = StreamUtilities.GetUninitializedArray<byte>(_attr.CompressionUnitSize * context.BiosParameterBlock.BytesPerCluster);
+        _ioBuffer = StreamUtilities.GetUninitializedArray<byte>(_attr.CompressionUnitSize * context.BiosParameterBlock.BytesPerCluster);
     }
 
     public override long AllocatedClusterCount => _rawStream.AllocatedClusterCount;

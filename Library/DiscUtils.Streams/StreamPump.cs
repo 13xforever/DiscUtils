@@ -21,6 +21,7 @@
 //
 
 using System;
+using System.Buffers;
 using System.IO;
 
 namespace DiscUtils.Streams;
@@ -159,22 +160,29 @@ public sealed class StreamPump
 
     private void RunNonSparse()
     {
-        var copyBuffer = new byte[BufferSize];
+        var copyBuffer = ArrayPool<byte>.Shared.Rent(BufferSize);
 
-        InputStream.Position = 0;
-        OutputStream.Position = 0;
-
-        var numRead = InputStream.Read(copyBuffer, 0, copyBuffer.Length);
-        while (numRead > 0)
+        try
         {
-            BytesRead += numRead;
+            InputStream.Position = 0;
+            OutputStream.Position = 0;
 
-            OutputStream.Write(copyBuffer, 0, numRead);
-            BytesWritten += numRead;
+            var numRead = InputStream.Read(copyBuffer, 0, BufferSize);
+            while (numRead > 0)
+            {
+                BytesRead += numRead;
 
-            RaiseProgressEvent();
+                OutputStream.Write(copyBuffer, 0, numRead);
+                BytesWritten += numRead;
 
-            numRead = InputStream.Read(copyBuffer, 0, copyBuffer.Length);
+                RaiseProgressEvent();
+
+                numRead = InputStream.Read(copyBuffer, 0, BufferSize);
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(copyBuffer);
         }
     }
 
@@ -190,49 +198,58 @@ public sealed class StreamPump
             throw new InvalidOperationException("Buffer size is not a multiple of the sparse chunk size");
         }
 
-        var copyBuffer = new byte[Math.Max(BufferSize, SparseChunkSize)];
+        var copyBufferLength = Math.Max(BufferSize, SparseChunkSize);
 
-        BytesRead = 0;
-        BytesWritten = 0;
+        var copyBuffer = ArrayPool<byte>.Shared.Rent(BufferSize);
 
-        foreach (var extent in inStream.Extents)
+        try
         {
-            inStream.Position = extent.Start;
+            BytesRead = 0;
+            BytesWritten = 0;
 
-            long extentOffset = 0;
-            while (extentOffset < extent.Length)
+            foreach (var extent in inStream.Extents)
             {
-                var numRead = (int)Math.Min(copyBuffer.Length, extent.Length - extentOffset);
-                inStream.ReadExactly(copyBuffer, 0, numRead);
-                BytesRead += numRead;
+                inStream.Position = extent.Start;
 
-                var copyBufferOffset = 0;
-                for (var i = 0; i < numRead; i += SparseChunkSize)
+                long extentOffset = 0;
+                while (extentOffset < extent.Length)
                 {
-                    if (IsAllZeros(copyBuffer, i, Math.Min(SparseChunkSize, numRead - i)))
+                    var numRead = (int)Math.Min(copyBufferLength, extent.Length - extentOffset);
+                    inStream.ReadExactly(copyBuffer, 0, numRead);
+                    BytesRead += numRead;
+
+                    var copyBufferOffset = 0;
+                    for (var i = 0; i < numRead; i += SparseChunkSize)
                     {
-                        if (copyBufferOffset < i)
+                        if (IsAllZeros(copyBuffer, i, Math.Min(SparseChunkSize, numRead - i)))
                         {
-                            OutputStream.Position = extent.Start + extentOffset + copyBufferOffset;
-                            OutputStream.Write(copyBuffer, copyBufferOffset, i - copyBufferOffset);
-                            BytesWritten += i - copyBufferOffset;
+                            if (copyBufferOffset < i)
+                            {
+                                OutputStream.Position = extent.Start + extentOffset + copyBufferOffset;
+                                OutputStream.Write(copyBuffer, copyBufferOffset, i - copyBufferOffset);
+                                BytesWritten += i - copyBufferOffset;
+                            }
+
+                            copyBufferOffset = i + SparseChunkSize;
                         }
-
-                        copyBufferOffset = i + SparseChunkSize;
                     }
+
+                    if (copyBufferOffset < numRead)
+                    {
+                        OutputStream.Position = extent.Start + extentOffset + copyBufferOffset;
+                        OutputStream.Write(copyBuffer, copyBufferOffset, numRead - copyBufferOffset);
+                        BytesWritten += numRead - copyBufferOffset;
+                    }
+
+                    extentOffset += numRead;
+
+                    RaiseProgressEvent();
                 }
-
-                if (copyBufferOffset < numRead)
-                {
-                    OutputStream.Position = extent.Start + extentOffset + copyBufferOffset;
-                    OutputStream.Write(copyBuffer, copyBufferOffset, numRead - copyBufferOffset);
-                    BytesWritten += numRead - copyBufferOffset;
-                }
-
-                extentOffset += numRead;
-
-                RaiseProgressEvent();
             }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(copyBuffer);
         }
 
         // Ensure the output stream is at least as long as the input stream.  This uses

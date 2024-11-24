@@ -53,7 +53,7 @@ public sealed class Provider : NavigationCmdletProvider, IDynamicPropertyCmdletP
         if (string.IsNullOrEmpty(drive.Root))
         {
             WriteError(new ErrorRecord(
-                new ArgumentException("drive"),
+                new ArgumentException(null, nameof(drive)),
                 "NoRoot",
                 ErrorCategory.InvalidArgument,
                 drive));
@@ -64,7 +64,7 @@ public sealed class Provider : NavigationCmdletProvider, IDynamicPropertyCmdletP
         if (mountPaths.Length is < 1 or > 2)
         {
             WriteError(new ErrorRecord(
-                new ArgumentException("drive"),
+                new ArgumentException(null, nameof(drive)),
                 "InvalidRoot",
                 ErrorCategory.InvalidArgument,
                 drive));
@@ -81,7 +81,7 @@ public sealed class Provider : NavigationCmdletProvider, IDynamicPropertyCmdletP
         if (hiveStream == null)
         {
             WriteError(new ErrorRecord(
-                new ArgumentException("drive"),
+                new ArgumentException(null, nameof(drive)),
                 "InvalidRoot",
                 ErrorCategory.InvalidArgument,
                 drive));
@@ -305,7 +305,7 @@ public sealed class Provider : NavigationCmdletProvider, IDynamicPropertyCmdletP
         if (key == null)
         {
             WriteError(new ErrorRecord(
-                new ArgumentException("path"),
+                new ArgumentException(null, nameof(path)),
                 "NoSuchRegistryKey",
                 ErrorCategory.ObjectNotFound,
                 path));
@@ -352,7 +352,7 @@ public sealed class Provider : NavigationCmdletProvider, IDynamicPropertyCmdletP
         if (key == null)
         {
             WriteError(new ErrorRecord(
-                new ArgumentException("path"),
+                new ArgumentException(null, nameof(path)),
                 "NoSuchRegistryKey",
                 ErrorCategory.ObjectNotFound,
                 path));
@@ -364,7 +364,11 @@ public sealed class Provider : NavigationCmdletProvider, IDynamicPropertyCmdletP
         {
             try
             {
-                type = (RegistryValueType)Enum.Parse(typeof(RegistryValueType), propertyTypeName, true);
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP
+                type = Enum.Parse<RegistryValueType>(propertyTypeName, ignoreCase: true);
+#else
+                type = (RegistryValueType)Enum.Parse(typeof(RegistryValueType), propertyTypeName, ignoreCase: true);
+#endif
             }
             catch(ArgumentException)
             {
@@ -390,7 +394,7 @@ public sealed class Provider : NavigationCmdletProvider, IDynamicPropertyCmdletP
         if (key == null)
         {
             WriteError(new ErrorRecord(
-                new ArgumentException("path"),
+                new ArgumentException(null, nameof(path)),
                 "NoSuchRegistryKey",
                 ErrorCategory.ObjectNotFound,
                 path));
@@ -419,7 +423,7 @@ public sealed class Provider : NavigationCmdletProvider, IDynamicPropertyCmdletP
         return null;
     }
 
-    #endregion
+#endregion
 
     private VirtualRegistryPSDriveInfo DriveInfo => PSDriveInfo as VirtualRegistryPSDriveInfo;
 
@@ -479,7 +483,7 @@ public sealed class Provider : NavigationCmdletProvider, IDynamicPropertyCmdletP
         WriteItemObject(psObj, path.Trim(Internal.Utilities.PathSeparators), true);
     }
 
-    private bool IsMatch(string valueName, Collection<string> filters)
+    private static bool IsMatch(string valueName, Collection<string> filters)
     {
         if (filters == null || filters.Count == 0)
         {
@@ -508,7 +512,7 @@ public sealed class Provider : NavigationCmdletProvider, IDynamicPropertyCmdletP
     {
         return type switch
         {
-            RegistryValueType.Binary or RegistryValueType.None => new byte[0],
+            RegistryValueType.Binary or RegistryValueType.None => Array.Empty<byte>(),
             RegistryValueType.Dword or RegistryValueType.DwordBigEndian => 0,
             RegistryValueType.Qword => 0L,
             RegistryValueType.String or RegistryValueType.ExpandString => "",

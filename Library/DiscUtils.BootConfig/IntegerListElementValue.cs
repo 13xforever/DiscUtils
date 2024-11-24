@@ -68,7 +68,7 @@ internal class IntegerListElementValue : ElementValue
 
     internal byte[] GetBytes()
     {
-        var bytes = new byte[_values.Length * 8];
+        var bytes = StreamUtilities.GetUninitializedArray<byte>(_values.Length * 8);
         for (var i = 0; i < _values.Length; ++i)
         {
             EndianUtilities.WriteBytesLittleEndian(_values[i], bytes, i * 8);

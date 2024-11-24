@@ -42,7 +42,7 @@ public sealed class AligningStream : WrappingMappedStream<SparseStream>
         : base(toWrap, ownership, null)
     {
         _blockSize = blockSize;
-        _alignmentBuffer = new byte[blockSize];
+        _alignmentBuffer = StreamUtilities.GetUninitializedArray<byte>(blockSize);
     }
 
     public override long Position

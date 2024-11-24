@@ -21,10 +21,12 @@
 //
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using DiscUtils.Internal;
 using DiscUtils.Streams;
+using DiscUtils.Streams.Compatibility;
 using LTRData.Extensions.Buffers;
 
 namespace DiscUtils.Vmdk;
@@ -769,47 +771,73 @@ public sealed class DiskImageFile : VirtualDiskLayer
         // Zero-out the descriptor space
         if (descriptorLength > 0)
         {
-            var descriptor = new byte[descriptorLength];
-            extentStream.Position = descriptorStart * Sizes.Sector;
-            extentStream.Write(descriptor, 0, descriptor.Length);
+            var descriptor = ArrayPool<byte>.Shared.Rent((int)descriptorLength);
+            try
+            {
+                Array.Clear(descriptor, 0, (int)descriptorLength);
+                extentStream.Position = descriptorStart * Sizes.Sector;
+                extentStream.Write(descriptor, 0, (int)descriptorLength);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(descriptor);
+            }
         }
 
         // Generate the redundant grain dir, and write it
-        var grainDir = new byte[numGrainTables * 4];
-        for (var i = 0; i < numGrainTables; ++i)
+        var grainDirAlloc = ArrayPool<byte>.Shared.Rent(numGrainTables * 4);
+        var grainDir = grainDirAlloc.AsSpan(0, numGrainTables * 4);
+
+        try
         {
-            EndianUtilities.WriteBytesLittleEndian(
-                (uint)(redundantGrainTablesStart + i * MathUtilities.Ceil(GtesPerGt * 4, Sizes.Sector)), grainDir, i * 4);
+            for (var i = 0; i < numGrainTables; ++i)
+            {
+                EndianUtilities.WriteBytesLittleEndian(
+                    (uint)(redundantGrainTablesStart + i * MathUtilities.Ceil(GtesPerGt * 4, Sizes.Sector)), grainDir.Slice(i * 4));
+            }
+
+            extentStream.Position = redundantGrainDirStart * Sizes.Sector;
+            extentStream.Write(grainDir);
+
+            // Write out the blank grain tables
+            var grainTable = ArrayPool<byte>.Shared.Rent(GtesPerGt * 4);
+            Array.Clear(grainTable, 0, GtesPerGt * 4);
+
+            try
+            {
+                for (var i = 0; i < numGrainTables; ++i)
+                {
+                    extentStream.Position = redundantGrainTablesStart * Sizes.Sector +
+                                            i * MathUtilities.RoundUp(GtesPerGt * 4, Sizes.Sector);
+                    extentStream.Write(grainTable, 0, GtesPerGt * 4);
+                }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(grainTable);
+            }
+
+            // Generate the main grain dir, and write it
+            for (var i = 0; i < numGrainTables; ++i)
+            {
+                EndianUtilities.WriteBytesLittleEndian(
+                    (uint)(grainTablesStart + i * MathUtilities.Ceil(GtesPerGt * 4, Sizes.Sector)), grainDir.Slice(i * 4));
+            }
+
+            extentStream.Position = grainDirStart * Sizes.Sector;
+            extentStream.Write(grainDir);
+
+            // Write out the blank grain tables
+            for (var i = 0; i < numGrainTables; ++i)
+            {
+                extentStream.Position = grainTablesStart * Sizes.Sector +
+                                        i * MathUtilities.RoundUp(GtesPerGt * 4, Sizes.Sector);
+                extentStream.Write(grainTable, 0, grainTable.Length);
+            }
         }
-
-        extentStream.Position = redundantGrainDirStart * Sizes.Sector;
-        extentStream.Write(grainDir, 0, grainDir.Length);
-
-        // Write out the blank grain tables
-        var grainTable = new byte[GtesPerGt * 4];
-        for (var i = 0; i < numGrainTables; ++i)
+        finally
         {
-            extentStream.Position = redundantGrainTablesStart * Sizes.Sector +
-                                    i * MathUtilities.RoundUp(GtesPerGt * 4, Sizes.Sector);
-            extentStream.Write(grainTable, 0, grainTable.Length);
-        }
-
-        // Generate the main grain dir, and write it
-        for (var i = 0; i < numGrainTables; ++i)
-        {
-            EndianUtilities.WriteBytesLittleEndian(
-                (uint)(grainTablesStart + i * MathUtilities.Ceil(GtesPerGt * 4, Sizes.Sector)), grainDir, i * 4);
-        }
-
-        extentStream.Position = grainDirStart * Sizes.Sector;
-        extentStream.Write(grainDir, 0, grainDir.Length);
-
-        // Write out the blank grain tables
-        for (var i = 0; i < numGrainTables; ++i)
-        {
-            extentStream.Position = grainTablesStart * Sizes.Sector +
-                                    i * MathUtilities.RoundUp(GtesPerGt * 4, Sizes.Sector);
-            extentStream.Write(grainTable, 0, grainTable.Length);
+            ArrayPool<byte>.Shared.Return(grainDirAlloc);
         }
 
         // Make sure stream is correct length
@@ -821,7 +849,7 @@ public sealed class DiskImageFile : VirtualDiskLayer
 
     private static void CreateExtent(Stream extentStream, long size, ExtentType type)
     {
-        CreateExtent(extentStream, size, type, 0, out var descriptorStart);
+        CreateExtent(extentStream, size, type, descriptorLength: 0, descriptorStart: out _);
     }
 
     private static void CreateExtent(Stream extentStream, long size, ExtentType type, long descriptorLength,
@@ -845,8 +873,16 @@ public sealed class DiskImageFile : VirtualDiskLayer
             extentStream.Position = 0;
             extentStream.Write(header.GetBytes(), 0, 4 * Sizes.Sector);
 
-            var blankGlobalDirectory = new byte[header.NumGdEntries * 4];
-            extentStream.Write(blankGlobalDirectory, 0, blankGlobalDirectory.Length);
+            var blankGlobalDirectory = ArrayPool<byte>.Shared.Rent((int)(header.NumGdEntries * 4));
+            try
+            {
+                Array.Clear(blankGlobalDirectory, 0, (int)(header.NumGdEntries * 4));
+                extentStream.Write(blankGlobalDirectory, 0, (int)(header.NumGdEntries * 4));
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(blankGlobalDirectory);
+            }
 
             descriptorStart = 0;
         }
@@ -973,8 +1009,17 @@ public sealed class DiskImageFile : VirtualDiskLayer
                     _descriptor.ContentId = (uint)_rng.Next();
                     descriptorStream.Position = 0;
                     _descriptor.Write(descriptorStream);
-                    var blank = new byte[descriptorStream.Length - descriptorStream.Position];
-                    descriptorStream.Write(blank, 0, blank.Length);
+                    var blankLength = (int)(descriptorStream.Length - descriptorStream.Position);
+                    var blank = ArrayPool<byte>.Shared.Rent(blankLength);
+                    try
+                    {
+                        Array.Clear(blank, 0, blankLength);
+                        descriptorStream.Write(blank, 0, blankLength);
+                    }
+                    finally
+                    {
+                        ArrayPool<byte>.Shared.Return(blank);
+                    }
                 }
             }
         }

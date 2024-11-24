@@ -1,3 +1,4 @@
+using DiscUtils.Streams;
 using System;
 using System.Globalization;
 using System.Text;
@@ -202,7 +203,7 @@ public abstract class GenericSecurityDescriptor
 
     public byte[] GetSecurityDescriptorBinaryForm()
     {
-        var buffer = new byte[BinaryLength];
+        var buffer = StreamUtilities.GetUninitializedArray<byte>(BinaryLength);
         GetBinaryForm(buffer, 0);
         return buffer;
     }

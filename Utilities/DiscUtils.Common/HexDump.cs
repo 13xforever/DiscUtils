@@ -50,7 +50,7 @@ public static class HexDump
     /// <param name="output">The destination for the hex dump.</param>
     public static void Generate(byte[] data, int offset, int count, TextWriter output)
     {
-        var tempBuffer = new byte[count];
+        var tempBuffer = StreamUtilities.GetUninitializedArray<byte>(count);
         System.Buffer.BlockCopy(data, offset, tempBuffer, 0, count);
         Generate(SparseStream.FromStream(new MemoryStream(tempBuffer, false), Ownership.None), output);
     }
@@ -73,7 +73,7 @@ public static class HexDump
     public static void Generate(SparseStream stream, TextWriter output)
     {
         stream.Position = 0;
-        var buffer = new byte[1024 * 1024];
+        var buffer = StreamUtilities.GetUninitializedArray<byte>(1024 * 1024);
 
         foreach(var block in StreamExtent.Blocks(stream.Extents, buffer.Length))
         {

@@ -88,17 +88,17 @@ internal class PhysicalVolume
     {
         pvLabel = null;
         content.Position = 0;
-        var buffer = new byte[SECTOR_SIZE];
+        Span<byte> buffer = stackalloc byte[SECTOR_SIZE];
         for (uint i = 0; i < 4; i++)
         {
-            if (content.ReadMaximum(buffer, 0, SECTOR_SIZE) != SECTOR_SIZE)
+            if (content.ReadMaximum(buffer) != SECTOR_SIZE)
             {
                 return false;
             }
 
             var label = EncodingUtilities
                 .GetLatin1Encoding()
-                .GetString(buffer, 0x0, 0x8);
+                .GetString(buffer.Slice(0x0, 0x8));
 
             if (label == PhysicalVolumeLabel.LABEL_ID)
             {

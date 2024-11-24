@@ -33,7 +33,7 @@ public static class BitCounter
 
     static BitCounter()
     {
-        _lookupTable = new byte[256];
+        _lookupTable = StreamUtilities.GetUninitializedArray<byte>(256);
         for (var i = 0; i < 256; i++)
         {
             byte bitCount = 0;

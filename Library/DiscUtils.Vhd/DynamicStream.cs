@@ -1079,7 +1079,7 @@ public class DynamicStream : MappedStream
         {
             if (_allAllocatedBlockBitmap == null)
             {
-                var newArray = new byte[_blockBitmapSize];
+                var newArray = StreamUtilities.GetUninitializedArray<byte>(_blockBitmapSize);
                 newArray.AsSpan().Fill(0xff);
                 _allAllocatedBlockBitmap = newArray;
             }

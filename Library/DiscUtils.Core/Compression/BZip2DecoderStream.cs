@@ -87,7 +87,7 @@ public sealed class BZip2DecoderStream : ReadOnlyCompatibilityStream
 
         _rleStream = new BZip2RleStream();
         _blockDecoder = new BZip2BlockDecoder(blockSize);
-        _blockBuffer = new byte[blockSize];
+        _blockBuffer = StreamUtilities.GetUninitializedArray<byte>(blockSize);
 
         if (ReadBlock() == 0)
         {

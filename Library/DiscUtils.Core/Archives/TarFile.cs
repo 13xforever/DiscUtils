@@ -196,7 +196,7 @@ public class TarFile : IDisposable
 
     public static IEnumerable<TarFileData> EnumerateFiles(Stream archive)
     {
-        var hdrBuf = new byte[512];
+        var hdrBuf = StreamUtilities.GetUninitializedArray<byte>(512);
 
         string long_path = null;
 
@@ -275,7 +275,7 @@ public class TarFile : IDisposable
                 }
                 else
                 {
-                    var data = new byte[hdr.FileLength];
+                    var data = StreamUtilities.GetUninitializedArray<byte>((int)hdr.FileLength);
 
                     archive.ReadExactly(data, 0, data.Length);
 
@@ -297,7 +297,7 @@ public class TarFile : IDisposable
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP
     public static async IAsyncEnumerable<TarFileData> EnumerateFilesAsync(Stream archive, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var hdrBuf = new byte[512];
+        var hdrBuf = StreamUtilities.GetUninitializedArray<byte>(512);
 
         string long_path = null;
 
@@ -376,7 +376,7 @@ public class TarFile : IDisposable
                 }
                 else
                 {
-                    var data = new byte[hdr.FileLength];
+                    var data = StreamUtilities.GetUninitializedArray<byte>((int)hdr.FileLength);
 
                     await archive.ReadExactlyAsync(data, cancellationToken).ConfigureAwait(false);
 

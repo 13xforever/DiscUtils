@@ -77,7 +77,7 @@ public class PositionWrappingStream : WrappingStream
             throw new NotSupportedException("backward seeking is not supported");
         }
 
-        var buffer = new byte[Sizes.OneKiB];
+        var buffer = StreamUtilities.GetUninitializedArray<byte>(Sizes.OneKiB);
         while (offset > 0)
         {
             var read = base.Read(buffer, 0, (int)Math.Min(buffer.Length, offset));

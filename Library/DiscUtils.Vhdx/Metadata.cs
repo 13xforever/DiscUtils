@@ -24,6 +24,8 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using DiscUtils.Streams;
+using DiscUtils.Streams.Compatibility;
+
 #if !NET5_0_OR_GREATER
 using System.Security.Permissions;
 #endif
@@ -54,7 +56,7 @@ internal sealed class Metadata
 
     private delegate T Reader<T>(ReadOnlySpan<byte> buffer);
 
-    private delegate void Writer<T>(T val, byte[] buffer, int offset);
+    private delegate void Writer<T>(T val, Span<byte> buffer);
 
     public MetadataTable Table { get; }
 
@@ -137,9 +139,9 @@ internal sealed class Metadata
 
         stream.Position = dataOffset;
 
-        var buffer = new byte[entry.Length];
-        writer(data, buffer, 0);
-        stream.Write(buffer, 0, buffer.Length);
+        Span<byte> buffer = stackalloc byte[(int)entry.Length];
+        writer(data, buffer);
+        stream.Write(buffer);
 
         return entry.Length;
     }

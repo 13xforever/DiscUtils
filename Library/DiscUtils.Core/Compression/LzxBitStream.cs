@@ -133,7 +133,7 @@ internal sealed class LzxBitStream : BitStream
             throw new InvalidOperationException("Attempt to read bytes when not byte-aligned");
         }
 
-        var buffer = new byte[count];
+        var buffer = StreamUtilities.GetUninitializedArray<byte>(count);
         ReadBytes(buffer, 0, count);
         return buffer;
     }

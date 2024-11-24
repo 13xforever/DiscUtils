@@ -29,6 +29,7 @@ using System.Threading.Tasks;
 using DiscUtils.Internal;
 using DiscUtils.Partitions;
 using DiscUtils.Streams;
+using LTRData.Extensions.Buffers;
 
 namespace DiscUtils;
 
@@ -523,7 +524,7 @@ public abstract class VirtualDisk :
                 else
                 {
                     var extension = Path.GetExtension(uri.AbsolutePath);
-                    if (extension.StartsWith(".", StringComparison.Ordinal))
+                    if (extension.StartsWith('.'))
                     {
                         extension = extension.Substring(1);
                     }
@@ -566,7 +567,7 @@ public abstract class VirtualDisk :
         }
 
         var extension = Path.GetExtension(path);
-        if (extension.StartsWith(".", StringComparison.Ordinal))
+        if (extension.StartsWith('.'))
         {
             extension = extension.Substring(1);
         }
@@ -594,7 +595,7 @@ public abstract class VirtualDisk :
     /// <returns>The MBR as a byte array.</returns>
     public byte[] GetMasterBootRecord()
     {
-        var sector = new byte[Sizes.Sector];
+        var sector = StreamUtilities.GetUninitializedArray<byte>(Sizes.Sector);
 
         GetMasterBootRecord(sector);
 
@@ -687,7 +688,7 @@ public abstract class VirtualDisk :
     internal static VirtualDiskLayer OpenDiskLayer(FileLocator locator, string path, FileAccess access)
     {
         var extension = Path.GetExtension(path);
-        if (extension.StartsWith(".", StringComparison.Ordinal))
+        if (extension.StartsWith('.'))
         {
             extension = extension.Substring(1);
         }

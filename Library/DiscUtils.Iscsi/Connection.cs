@@ -162,7 +162,7 @@ internal sealed class Connection : IDisposable
                 if (resp.StatusPresent && resp.Status == ScsiStatus.CheckCondition)
                 {
                     var senseLength = EndianUtilities.ToUInt16BigEndian(pdu.ContentData, 0);
-                    var senseData = new byte[senseLength];
+                    var senseData = StreamUtilities.GetUninitializedArray<byte>(senseLength);
                     System.Buffer.BlockCopy(pdu.ContentData, 2, senseData, 0, senseLength);
                     throw new ScsiCommandException(resp.Status, "Target indicated SCSI failure", senseData);
                 }
@@ -255,7 +255,7 @@ internal sealed class Connection : IDisposable
                 if (resp.StatusPresent && resp.Status == ScsiStatus.CheckCondition)
                 {
                     var senseLength = EndianUtilities.ToUInt16BigEndian(pdu.ContentData, 0);
-                    var senseData = new byte[senseLength];
+                    var senseData = StreamUtilities.GetUninitializedArray<byte>(senseLength);
                     System.Buffer.BlockCopy(pdu.ContentData, 2, senseData, 0, senseLength);
                     throw new ScsiCommandException(resp.Status, "Target indicated SCSI failure", senseData);
                 }

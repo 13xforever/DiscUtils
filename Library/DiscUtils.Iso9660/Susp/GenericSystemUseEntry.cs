@@ -20,6 +20,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+using DiscUtils.Streams;
 using System;
 
 namespace DiscUtils.Iso9660;
@@ -32,7 +33,7 @@ internal sealed class GenericSystemUseEntry : SystemUseEntry
     {
         CheckAndSetCommonProperties(name, length, version, 4, 0xFF);
 
-        Data = new byte[length - 4];
+        Data = StreamUtilities.GetUninitializedArray<byte>(length - 4);
         data.Slice(4, length - 4).CopyTo(Data);
     }
 }

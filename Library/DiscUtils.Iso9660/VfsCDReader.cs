@@ -82,7 +82,7 @@ internal class VfsCDReader : VfsReadOnlyFileSystem<ReaderDirEntry, File, ReaderD
 
         long vdpos = 0x8000; // Skip lead-in
 
-        var buffer = new byte[IsoUtilities.SectorSize];
+        var buffer = StreamUtilities.GetUninitializedArray<byte>(IsoUtilities.SectorSize);
 
         long pvdPos = 0;
         long svdPos = 0;

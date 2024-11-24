@@ -48,7 +48,7 @@ internal class DirectoryExtent : BuilderExtent
 
     public override void PrepareForRead()
     {
-        _readCache = new byte[Length];
+        _readCache = StreamUtilities.GetUninitializedArray<byte>((int)Length);
         _dirInfo.Write(_readCache, _locationTable, _enc);
     }
 

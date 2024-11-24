@@ -199,7 +199,7 @@ public sealed class DiskBuilder : DiskImageBuilder
             var metadataBuffer = new byte[metadataRegion.Length];
             var metadataStream = new MemoryStream(metadataBuffer);
             Metadata.Initialize(metadataStream, fileParams, (ulong)_content.Length, (uint)logicalSectorSize,
-                (uint)physicalSectorSize, null);
+                (uint)physicalSectorSize, parentLocator: null);
             extents.Add(new BuilderBufferExtent(metadataRegion.FileOffset, metadataBuffer));
 
             var presentBlocks =

@@ -100,7 +100,7 @@ internal class DeviceElementValue : ElementValue
 
     internal byte[] GetBytes()
     {
-        var buffer = new byte[_record.Size + 0x10];
+        var buffer = StreamUtilities.GetUninitializedArray<byte>(_record.Size + 0x10);
 
         EndianUtilities.WriteBytesLittleEndian(_parentObject, buffer, 0);
         _record.GetBytes(buffer, 0x10);

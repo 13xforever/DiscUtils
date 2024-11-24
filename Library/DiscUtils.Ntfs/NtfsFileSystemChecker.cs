@@ -414,8 +414,8 @@ public sealed class NtfsFileSystemChecker : DiscFileSystemChecker
             }
         }
 
-        using Stream mftStream = file.OpenStream(AttributeType.Data, null, FileAccess.Read);
-        using Stream bitmapStream = file.OpenStream(AttributeType.Bitmap, null, FileAccess.Read);
+        using var mftStream = file.OpenStream(AttributeType.Data, null, FileAccess.Read);
+        using var bitmapStream = file.OpenStream(AttributeType.Bitmap, null, FileAccess.Read);
         var bitmap = new Bitmap(bitmapStream, long.MaxValue);
 
         long index = 0;
@@ -608,7 +608,7 @@ public sealed class NtfsFileSystemChecker : DiscFileSystemChecker
         return ok;
     }
 
-    private void ReportDump(IDiagnosticTraceable toDump)
+    private void ReportDump(NtfsFileSystem toDump)
     {
         _levelsDetected |= ReportLevels.Information;
         if ((_reportLevels & ReportLevels.Information) != 0)

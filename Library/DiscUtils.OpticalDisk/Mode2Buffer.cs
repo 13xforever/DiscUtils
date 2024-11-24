@@ -45,7 +45,7 @@ internal class Mode2Buffer : Streams.Buffer
     public Mode2Buffer(IBuffer toWrap)
     {
         _wrapped = toWrap;
-        _iobuffer = new byte[DiscImageFile.Mode2SectorSize];
+        _iobuffer = StreamUtilities.GetUninitializedArray<byte>(DiscImageFile.Mode2SectorSize);
     }
 
     public override bool CanRead => true;

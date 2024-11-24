@@ -130,7 +130,7 @@ public sealed class GuidPartitionTable : PartitionTable
         // Write the primary header
         var headerBuffer = diskGeometry.BytesPerSector <= 1024
             ? stackalloc byte[diskGeometry.BytesPerSector]
-            : new byte[diskGeometry.BytesPerSector];
+            : StreamUtilities.GetUninitializedArray<byte>(diskGeometry.BytesPerSector);
 
         header.WriteTo(headerBuffer);
         disk.Position = header.HeaderLba * diskGeometry.BytesPerSector;
@@ -312,9 +312,9 @@ public sealed class GuidPartitionTable : PartitionTable
         return new SubStream(_diskData, start, end - start);
     }
 
-    private static uint CalcEntriesCrc(byte[] buffer)
+    private static uint CalcEntriesCrc(ReadOnlySpan<byte> buffer)
     {
-        return Crc32LittleEndian.Compute(Crc32Algorithm.Common, buffer, 0, buffer.Length);
+        return Crc32LittleEndian.Compute(Crc32Algorithm.Common, buffer);
     }
 
     private static int CountEntries<T>(ICollection<T> values, Func<T, bool> pred)
@@ -355,7 +355,7 @@ public sealed class GuidPartitionTable : PartitionTable
         disk.Position = diskGeometry.BytesPerSector;
         var sector = diskGeometry.BytesPerSector <= 1024
             ? stackalloc byte[diskGeometry.BytesPerSector]
-            : new byte[diskGeometry.BytesPerSector];
+            : StreamUtilities.GetUninitializedArray<byte>(diskGeometry.BytesPerSector);
         
         disk.ReadExactly(sector);
 
@@ -536,7 +536,7 @@ public sealed class GuidPartitionTable : PartitionTable
     {
         var buffer = _diskGeometry.BytesPerSector <= 1024
             ? stackalloc byte[_diskGeometry.BytesPerSector]
-            : new byte[_diskGeometry.BytesPerSector];
+            : StreamUtilities.GetUninitializedArray<byte>(_diskGeometry.BytesPerSector);
 
         _primaryHeader.EntriesCrc = CalcEntriesCrc(_entryBuffer);
         _primaryHeader.WriteTo(buffer);
@@ -551,7 +551,7 @@ public sealed class GuidPartitionTable : PartitionTable
     {
         var buffer = _diskGeometry.BytesPerSector <= 1024
             ? stackalloc byte[_diskGeometry.BytesPerSector]
-            : new byte[_diskGeometry.BytesPerSector];
+            : StreamUtilities.GetUninitializedArray<byte>(_diskGeometry.BytesPerSector);
 
         _secondaryHeader.EntriesCrc = CalcEntriesCrc(_entryBuffer);
         _secondaryHeader.WriteTo(buffer);

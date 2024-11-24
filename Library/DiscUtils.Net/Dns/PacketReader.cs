@@ -106,7 +106,7 @@ internal sealed class PacketReader
 
     public byte[] ReadBytes(int count)
     {
-        var result = new byte[count];
+        var result = StreamUtilities.GetUninitializedArray<byte>(count);
         System.Buffer.BlockCopy(_data, Position, result, 0, count);
         Position += count;
         return result;

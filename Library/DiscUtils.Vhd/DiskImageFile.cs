@@ -21,6 +21,7 @@
 //
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -496,15 +497,29 @@ public sealed class DiskImageFile : VirtualDiskLayer
         var batSize = (dynamicHeader.MaxTableEntries * 4 + Sizes.Sector - 1) / Sizes.Sector *
                       Sizes.Sector;
 
-        var bat = batSize <= 1024 ? stackalloc byte[batSize] : new byte[batSize];
+        byte[] batAlloc = null;
 
-        bat.Fill(0xff);
+        var bat = batSize <= 1024
+            ? stackalloc byte[batSize]
+            : (batAlloc = ArrayPool<byte>.Shared.Rent(batSize)).AsSpan(0, batSize);
 
-        stream.Position = 0;
-        stream.Write(footerBlock);
-        stream.Write(dynamicHeaderBlock);
-        stream.Write(bat);
-        stream.Write(footerBlock);
+        try
+        {
+            bat.Fill(0xff);
+
+            stream.Position = 0;
+            stream.Write(footerBlock);
+            stream.Write(dynamicHeaderBlock);
+            stream.Write(bat);
+            stream.Write(footerBlock);
+        }
+        finally
+        {
+            if (batAlloc is not null)
+            {
+                ArrayPool<byte>.Shared.Return(batAlloc);
+            }
+        }
     }
 
     private static void InitializeDifferencingInternal(Stream stream, DiskImageFile parent,
@@ -548,17 +563,28 @@ public sealed class DiskImageFile : VirtualDiskLayer
         Span<byte> platformLocator2 = stackalloc byte[512];
         Encoding.Unicode.GetBytes(parentRelativePath.AsSpan(), platformLocator2);
 
-        Span<byte> bat = batSize <= 1024 ? stackalloc byte[batSize] : new byte[batSize];
+        byte[] batAlloc = null;
+        
+        var bat = batSize <= 1024
+            ? stackalloc byte[batSize]
+            : (batAlloc = ArrayPool<byte>.Shared.Rent(batSize)).AsSpan(0, batSize);
 
-        bat.Fill(0xff);
+        try
+        {
+            bat.Fill(0xff);
 
-        stream.Position = 0;
-        stream.Write(footerBlock);
-        stream.Write(dynamicHeaderBlock);
-        stream.Write(bat);
-        stream.Write(platformLocator1);
-        stream.Write(platformLocator2);
-        stream.Write(footerBlock);
+            stream.Position = 0;
+            stream.Write(footerBlock);
+            stream.Write(dynamicHeaderBlock);
+            stream.Write(bat);
+            stream.Write(platformLocator1);
+            stream.Write(platformLocator2);
+            stream.Write(footerBlock);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(batAlloc);
+        }
     }
 
     /// <summary>

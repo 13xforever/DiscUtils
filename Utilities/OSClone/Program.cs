@@ -103,12 +103,7 @@ class Program : ProgramBase
         byte[] bootCode;
         using (var bootStream = sourceNtfs.OpenFile("$Boot", FileMode.Open, FileAccess.Read))
         {
-            bootCode = new byte[bootStream.Length];
-            var totalRead = 0;
-            while (totalRead < bootCode.Length)
-            {
-                totalRead += bootStream.Read(bootCode, totalRead, bootCode.Length - totalRead);
-            }
+            bootCode = bootStream.ReadExactly((int)bootStream.Length);
         }
 
         // Partition the new disk with a single NTFS partition

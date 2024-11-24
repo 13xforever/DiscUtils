@@ -40,7 +40,6 @@ internal class ResourceInfo
         Header.Read(buffer);
         PartNumber = EndianUtilities.ToUInt16LittleEndian(buffer.Slice(ShortResourceHeader.Size));
         RefCount = EndianUtilities.ToUInt32LittleEndian(buffer.Slice(ShortResourceHeader.Size + 2));
-        Hash = new byte[20];
-        buffer.Slice(ShortResourceHeader.Size + 6, 20).CopyTo(Hash);
+        Hash = buffer.Slice(ShortResourceHeader.Size + 6, 20).ToArray();
     }
 }

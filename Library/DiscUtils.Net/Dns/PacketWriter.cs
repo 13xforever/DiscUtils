@@ -35,7 +35,7 @@ internal sealed class PacketWriter
 
     public PacketWriter(int maxSize)
     {
-        _data = new byte[maxSize];
+        _data = StreamUtilities.GetUninitializedArray<byte>(maxSize);
     }
 
     public void WriteName(string name)
@@ -67,7 +67,7 @@ internal sealed class PacketWriter
 
     public byte[] GetBytes()
     {
-        var result = new byte[_pos];
+        var result = StreamUtilities.GetUninitializedArray<byte>(_pos);
         System.Buffer.BlockCopy(_data, 0, result, 0, _pos);
         return result;
     }

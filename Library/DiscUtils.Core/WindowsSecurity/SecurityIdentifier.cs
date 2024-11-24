@@ -3,6 +3,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace DiscUtils.Core.WindowsSecurity;
@@ -17,10 +18,14 @@ public sealed class SecurityIdentifier : IdentityReference, IComparable<Security
 
     public SecurityIdentifier(string sddlForm)
     {
+#if NET6_0_OR_GREATER
+        ArgumentNullException.ThrowIfNull(sddlForm);
+#else
         if (sddlForm == null)
         {
             throw new ArgumentNullException(nameof(sddlForm));
         }
+#endif
 
         buffer = ParseSddlForm(sddlForm);
     }
@@ -119,10 +124,14 @@ public sealed class SecurityIdentifier : IdentityReference, IComparable<Security
         }
         else
         {
+#if NET6_0_OR_GREATER
+            ArgumentNullException.ThrowIfNull(domainSid);
+#else
             if (domainSid == null)
             {
                 throw new ArgumentNullException(nameof(domainSid));
             }
+#endif
 
             buffer = domainSid.CreateSubSid(uint.Parse(acct.RidStr)).buffer;
         }
@@ -204,10 +213,14 @@ public sealed class SecurityIdentifier : IdentityReference, IComparable<Security
     // The comparison was determined to be: authority, then subauthority count, then subauthority.
     public int CompareTo(SecurityIdentifier sid)
     {
+#if NET6_0_OR_GREATER
+        ArgumentNullException.ThrowIfNull(sid);
+#else
         if (sid == null)
         {
             throw new ArgumentNullException(nameof(sid));
         }
+#endif
 
         int result;
         if (0 != (result = SidAuthority.CompareTo(sid.SidAuthority)))
@@ -456,7 +469,7 @@ public sealed class SecurityIdentifier : IdentityReference, IComparable<Security
             throw new ArgumentException("Only SIDs with revision 1 are supported");
         }
 
-        var buffer = new byte[8 + (numSubAuthorities * 4)];
+        var buffer = StreamUtilities.GetUninitializedArray<byte>(8 + (numSubAuthorities * 4));
         buffer[0] = 1;
         buffer[1] = (byte)numSubAuthorities;
 

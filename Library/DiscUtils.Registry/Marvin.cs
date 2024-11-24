@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -107,11 +108,27 @@ internal static class Marvin
 
     public static ulong DefaultSeed { get; } = GenerateSeed();
 
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP
+    private static ulong GenerateSeed()
+    {
+        Span<byte> bytes = stackalloc byte[sizeof(ulong)];
+        RandomNumberGenerator.Fill(bytes);
+        return MemoryMarshal.Read<ulong>(bytes);
+    }
+#else
     private static ulong GenerateSeed()
     {
         using var rng = RandomNumberGenerator.Create();
-        var bytes = new byte[sizeof(ulong)];
-        rng.GetBytes(bytes);
-        return BitConverter.ToUInt64(bytes, 0);
+        var bytes = ArrayPool<byte>.Shared.Rent(sizeof(ulong));
+        try
+        {
+            rng.GetBytes(bytes, 0, sizeof(ulong));
+            return BitConverter.ToUInt64(bytes, 0);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
     }
+#endif
 }

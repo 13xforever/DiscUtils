@@ -21,6 +21,7 @@
 //
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using DiscUtils.Internal;
@@ -161,13 +162,20 @@ public class NfsFileSystem : DiscFileSystem
                     Math.Max(1 * Sizes.OneMiB,
                         Math.Min(_client.FileSystemInfo.WritePreferredBytes,
                             _client.FileSystemInfo.ReadPreferredBytes));
-                var buffer = new byte[bufferSize];
-
-                var numRead = sourceFs.Read(buffer, 0, bufferSize);
-                while (numRead > 0)
+                
+                var buffer = ArrayPool<byte>.Shared.Rent(bufferSize);
+                try
                 {
-                    destFs.Write(buffer, 0, numRead);
-                    numRead = sourceFs.Read(buffer, 0, bufferSize);
+                    var numRead = sourceFs.Read(buffer, 0, bufferSize);
+                    while (numRead > 0)
+                    {
+                        destFs.Write(buffer, 0, numRead);
+                        numRead = sourceFs.Read(buffer, 0, bufferSize);
+                    }
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(buffer);
                 }
             }
 

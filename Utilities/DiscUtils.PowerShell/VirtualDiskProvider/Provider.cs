@@ -57,7 +57,7 @@ public sealed class Provider : NavigationCmdletProvider, IContentCmdletProvider
         if (string.IsNullOrEmpty(drive.Root))
         {
             WriteError(new ErrorRecord(
-                new ArgumentException("drive"),
+                new ArgumentException(null, nameof(drive)),
                 "NoRoot",
                 ErrorCategory.InvalidArgument,
                 drive));
@@ -68,7 +68,7 @@ public sealed class Provider : NavigationCmdletProvider, IContentCmdletProvider
         if (mountPaths.Length is < 1 or > 2)
         {
             WriteError(new ErrorRecord(
-                new ArgumentException("drive"),
+                new ArgumentException(null, nameof(drive)),
                 "InvalidRoot",
                 ErrorCategory.InvalidArgument,
                 drive));
@@ -752,7 +752,7 @@ public sealed class Provider : NavigationCmdletProvider, IContentCmdletProvider
         }
     }
 
-    private void DoCopy(DiscDirectoryInfo srcDir, string srcFileName, DiscDirectoryInfo destDir, string destFileName, bool recurse)
+    private static void DoCopy(DiscDirectoryInfo srcDir, string srcFileName, DiscDirectoryInfo destDir, string destFileName, bool recurse)
     {
         var srcPath = Path.Combine(srcDir.FullName, srcFileName);
         var destPath = Path.Combine(destDir.FullName, destFileName);
@@ -771,7 +771,7 @@ public sealed class Provider : NavigationCmdletProvider, IContentCmdletProvider
         }
     }
 
-    private void DoRecursiveCopy(DiscFileSystem srcFs, string srcPath, DiscFileSystem destFs, string destPath)
+    private static void DoRecursiveCopy(DiscFileSystem srcFs, string srcPath, DiscFileSystem destFs, string destPath)
     {
         foreach (var dir in srcFs.GetDirectories(srcPath))
         {
@@ -789,7 +789,7 @@ public sealed class Provider : NavigationCmdletProvider, IContentCmdletProvider
         }
     }
 
-    private void DoCopyDirectory(DiscFileSystem srcFs, string srcPath, DiscFileSystem destFs, string destPath)
+    private static void DoCopyDirectory(DiscFileSystem srcFs, string srcPath, DiscFileSystem destFs, string destPath)
     {
         destFs.CreateDirectory(destPath);
 
@@ -806,19 +806,13 @@ public sealed class Provider : NavigationCmdletProvider, IContentCmdletProvider
         destFs.SetAttributes(destPath, srcFs.GetAttributes(srcPath));
     }
 
-    private void DoCopyFile(DiscFileSystem srcFs, string srcPath, DiscFileSystem destFs, string destPath)
+    private static void DoCopyFile(DiscFileSystem srcFs, string srcPath, DiscFileSystem destFs, string destPath)
     {
-        using (Stream src = srcFs.OpenFile(srcPath, FileMode.Open, FileAccess.Read))
-        using (Stream dest = destFs.OpenFile(destPath, FileMode.Create, FileAccess.ReadWrite))
+        using (var src = srcFs.OpenFile(srcPath, FileMode.Open, FileAccess.Read))
+        using (var dest = destFs.OpenFile(destPath, FileMode.Create, FileAccess.ReadWrite))
         {
+            src.CopyTo(dest);
             dest.SetLength(src.Length);
-            var buffer = new byte[1024 * 1024];
-            var numRead = src.Read(buffer, 0, buffer.Length);
-            while (numRead > 0)
-            {
-                dest.Write(buffer, 0, numRead);
-                numRead = src.Read(buffer, 0, buffer.Length);
-            }
         }
 
         if (srcFs is IWindowsFileSystem srcWindowsFs && destFs is IWindowsFileSystem destWindowsFs)

@@ -23,6 +23,7 @@
 using DiscUtils.Streams.Compatibility;
 using LTRData.Extensions.Buffers;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -208,23 +209,30 @@ public sealed class SnapshotStream : SparseStream
             throw new InvalidOperationException("No snapshot");
         }
 
-        var buffer = new byte[8192];
+        var buffer = ArrayPool<byte>.Shared.Rent(8192);
 
-        foreach (var extent in _diffExtents)
+        try
         {
-            _diffStream.Position = extent.Start;
-            _baseStream.Position = extent.Start;
-
-            var totalRead = 0;
-            while (totalRead < extent.Length)
+            foreach (var extent in _diffExtents)
             {
-                var toRead = (int)Math.Min(extent.Length - totalRead, buffer.Length);
+                _diffStream.Position = extent.Start;
+                _baseStream.Position = extent.Start;
 
-                var read = _diffStream.Read(buffer, 0, toRead);
-                _baseStream.Write(buffer, 0, read);
+                var totalRead = 0;
+                while (totalRead < extent.Length)
+                {
+                    var toRead = (int)Math.Min(extent.Length - totalRead, 8192);
 
-                totalRead += read;
+                    var read = _diffStream.Read(buffer, 0, toRead);
+                    _baseStream.Write(buffer, 0, read);
+
+                    totalRead += read;
+                }
             }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
         }
 
         _diffStream = null;

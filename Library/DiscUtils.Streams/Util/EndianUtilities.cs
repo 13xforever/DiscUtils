@@ -581,13 +581,10 @@ public static class EndianUtilities
     }
 
     public static byte[] ToByteArray(byte[] buffer, int offset, int length)
-    {
-        var result = new byte[length];
-        System.Buffer.BlockCopy(buffer, offset, result, 0, length);
-        return result;
-    }
+        => buffer.AsSpan(offset, length).ToArray();
 
-    public static byte[] ToByteArray(ReadOnlySpan<byte> buffer) => buffer.ToArray();
+    public static byte[] ToByteArray(ReadOnlySpan<byte> buffer)
+        => buffer.ToArray();
 
     public static T ToStruct<T>(byte[] buffer, int offset)
         where T : IByteArraySerializable, new()
@@ -620,7 +617,7 @@ public static class EndianUtilities
         if (!BitConverter.IsLittleEndian)
         {
             var byteCount = Encoding.Unicode.GetByteCount(chars);
-            var bytes = new byte[byteCount];
+            var bytes = StreamUtilities.GetUninitializedArray<byte>(byteCount);
             return bytes.AsSpan(0, Encoding.Unicode.GetBytes(chars, bytes));
         }
 #endif

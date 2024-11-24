@@ -53,7 +53,7 @@ internal class NonResidentDataBuffer : Buffer, IMappedBuffer
         _activeStream = _rawStream;
 
         _bytesPerCluster = _context.BiosParameterBlock.BytesPerCluster;
-        _ioBuffer = new byte[_bytesPerCluster];
+        _ioBuffer = StreamUtilities.GetUninitializedArray<byte>((int)_bytesPerCluster);
     }
 
     public long VirtualClusterCount => _cookedRuns.NextVirtualCluster;

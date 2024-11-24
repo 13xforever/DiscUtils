@@ -21,6 +21,7 @@
 //
 
 using System;
+using System.Buffers;
 using System.IO;
 using DiscUtils.Partitions;
 using DiscUtils.Streams;
@@ -113,16 +114,25 @@ internal class DynamicDisk : IDiagnosticTraceable
 
     private TocBlock GetTableOfContents()
     {
-        var buffer = new byte[_header.TocSizeLba * 512];
-        _disk.Content.Position = _header.ConfigurationStartLba * 512 + 1 * _header.TocSizeLba * 512;
+        var tocSize = (int)(_header.TocSizeLba * 512);
 
-        _disk.Content.ReadExactly(buffer, 0, buffer.Length);
-        var tocBlock = new TocBlock();
-        tocBlock.ReadFrom(buffer);
-
-        if (tocBlock.Signature == "TOCBLOCK")
+        var buffer = ArrayPool<byte>.Shared.Rent(tocSize);
+        try
         {
-            return tocBlock;
+            _disk.Content.Position = _header.ConfigurationStartLba * 512 + 1 * _header.TocSizeLba * 512;
+
+            _disk.Content.ReadExactly(buffer, 0, tocSize);
+            var tocBlock = new TocBlock();
+            tocBlock.ReadFrom(buffer);
+
+            if (tocBlock.Signature == "TOCBLOCK")
+            {
+                return tocBlock;
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
         }
 
         return null;

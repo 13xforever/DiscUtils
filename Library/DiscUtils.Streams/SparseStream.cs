@@ -23,6 +23,7 @@
 using DiscUtils.Streams.Compatibility;
 using LTRData.Extensions.Buffers;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -131,7 +132,16 @@ public abstract class SparseStream : CompatibilityStream
     /// </remarks>
     public virtual void Clear(int count)
     {
-        Write(new byte[count], 0, count);
+        var buffer = ArrayPool<byte>.Shared.Rent(count);
+        try
+        {
+            Array.Clear(buffer, 0, count);
+            Write(buffer, 0, count);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
     }
 
     /// <summary>

@@ -67,7 +67,7 @@ public abstract class DataReader
 
     protected void ReadToBuffer(int count)
     {
-        _buffer ??= new byte[_bufferSize];
+        _buffer ??= StreamUtilities.GetUninitializedArray<byte>(_bufferSize);
 
         _stream.ReadExactly(_buffer, 0, count);
     }

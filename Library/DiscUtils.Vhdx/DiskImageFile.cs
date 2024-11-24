@@ -498,7 +498,6 @@ public sealed class DiskImageFile : VirtualDiskLayer
         }
     }
 
-    public static byte[] oneMiB = new byte[1024 * 1024];
     private static void InitializeFixedInternal(Stream stream, long capacity, Geometry? geometry)
     {
         geometry ??= Geometry.FromCapacity(capacity);

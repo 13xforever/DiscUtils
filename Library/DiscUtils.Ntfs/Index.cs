@@ -56,8 +56,12 @@ internal class Index : IDisposable
 
         using (var s = _file.OpenStream(AttributeType.IndexRoot, _name, FileAccess.Read))
         {
-            var buffer = s.Length <= 1024 ? stackalloc byte[(int)s.Length] : new byte[s.Length];
+            var buffer = s.Length <= 1024
+                ? stackalloc byte[(int)s.Length]
+                : StreamUtilities.GetUninitializedArray<byte>((int)s.Length);
+
             s.ReadExactly(buffer);
+            
             _rootNode = new IndexNode(WriteRootNodeToDisk, 0, this, true, buffer.Slice(IndexRoot.HeaderOffset));
 
             // Give the attribute some room to breathe, so long as it doesn't squeeze others out

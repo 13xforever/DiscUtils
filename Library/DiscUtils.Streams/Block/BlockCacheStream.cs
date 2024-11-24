@@ -81,7 +81,7 @@ public sealed class BlockCacheStream : SparseStream
                 nameof(settings));
         }
 
-        _readBuffer = new byte[_settings.OptimumReadSize];
+        _readBuffer = StreamUtilities.GetUninitializedArray<byte>(_settings.OptimumReadSize);
         _blocksInReadBuffer = _settings.OptimumReadSize / _settings.BlockSize;
 
         var totalBlocks = (int)(_settings.ReadCacheSize / _settings.BlockSize);

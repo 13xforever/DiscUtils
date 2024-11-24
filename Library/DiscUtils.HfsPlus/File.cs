@@ -144,8 +144,8 @@ internal class File : IVfsFileWithStreams
                         // The data is stored in the resource fork.
                         var buffer = new FileBuffer(Context, fileInfo.ResourceFork, fileInfo.FileId);
                         var compressionFork = new CompressionResourceHeader();
-                        var compressionForkData = new byte[CompressionResourceHeader.Size];
-                        buffer.Read(0, compressionForkData, 0, CompressionResourceHeader.Size);
+                        Span<byte> compressionForkData = stackalloc byte[CompressionResourceHeader.Size];
+                        buffer.Read(0, compressionForkData);
                         compressionFork.ReadFrom(compressionForkData);
 
                         // The data is compressed in a number of blocks. Each block originally accounted for
@@ -154,25 +154,25 @@ internal class File : IVfsFileWithStreams
                         // the zlib header but the others don't, so we read them directly as deflate streams.
                         // For each block, we create a separate stream which we later aggregate.
                         var blockHeader = new CompressionResourceBlockHead();
-                        var blockHeaderData = new byte[CompressionResourceBlockHead.Size];
-                        buffer.Read(compressionFork.HeaderSize, blockHeaderData, 0, CompressionResourceBlockHead.Size);
+                        Span<byte> blockHeaderData = stackalloc byte[CompressionResourceBlockHead.Size];
+                        buffer.Read(compressionFork.HeaderSize, blockHeaderData);
                         blockHeader.ReadFrom(blockHeaderData);
 
                         var blockCount = blockHeader.NumBlocks;
                         var blocks = new CompressionResourceBlock[blockCount];
                         var streams = new SparseStream[blockCount];
 
+                        Span<byte> blockData = stackalloc byte[CompressionResourceBlock.Size];
+
                         for (var i = 0; i < blockCount; i++)
                         {
                             // Read the block data, first into a buffer and the into the class.
                             blocks[i] = new CompressionResourceBlock();
-                            var blockData = new byte[CompressionResourceBlock.Size];
+
                             buffer.Read(
                                 compressionFork.HeaderSize + CompressionResourceBlockHead.Size +
                                 i * CompressionResourceBlock.Size,
-                                blockData,
-                                0,
-                                blockData.Length);
+                                blockData);
                             blocks[i].ReadFrom(blockData);
 
                             // Create a SubBuffer which points to the data window that corresponds to the block.

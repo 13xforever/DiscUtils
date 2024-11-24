@@ -83,7 +83,7 @@ public abstract class DataWriter
 
     protected void EnsureBuffer()
     {
-        _buffer ??= new byte[_bufferSize];
+        _buffer ??= StreamUtilities.GetUninitializedArray<byte>(_bufferSize);
     }
 
     protected void FlushBuffer(int count)

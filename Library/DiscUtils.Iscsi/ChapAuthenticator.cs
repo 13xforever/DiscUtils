@@ -20,6 +20,7 @@
 // DEALINGS IN THE SOFTWARE.
 //
 
+using DiscUtils.Streams;
 using System;
 using System.Buffers;
 using System.Globalization;
@@ -93,7 +94,7 @@ internal class ChapAuthenticator : Authenticator
             throw new InvalidProtocolException("Invalid value in CHAP exchange");
         }
 
-        var data = new byte[(p.Length - 2) / 2];
+        var data = StreamUtilities.GetUninitializedArray<byte>((p.Length - 2) / 2);
         for (var i = 0; i < data.Length; ++i)
         {
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP
@@ -131,7 +132,7 @@ internal class ChapAuthenticator : Authenticator
         {
             toHash[0] = _identifier;
             Encoding.ASCII.GetBytes(_password, 0, _password.Length, toHash, 1);
-            Buffer.BlockCopy(_challenge, 0, toHash, _password.Length + 1, _challenge.Length);
+            System.Buffer.BlockCopy(_challenge, 0, toHash, _password.Length + 1, _challenge.Length);
 
             var hash = CalcMD5Hash(toHash, 0, toHashLength);
 

@@ -61,7 +61,7 @@ internal class ClusterStream : CompatibilityStream
         }
 
         _currentCluster = uint.MaxValue;
-        _clusterBuffer = new byte[_reader.ClusterSize];
+        _clusterBuffer = StreamUtilities.GetUninitializedArray<byte>(_reader.ClusterSize);
     }
 
     public override long? GetPositionInBaseStream(Stream baseStream, long virtualPosition)
