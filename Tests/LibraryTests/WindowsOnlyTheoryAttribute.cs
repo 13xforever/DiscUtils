@@ -40,7 +40,7 @@ public class WindowsOnlyFactAttribute : FactAttribute
 
             return null;
 #else
-            return "This test runs on macOS only";
+            return "This test runs on Windows only";
 #endif
         }
         set => throw new NotSupportedException();
