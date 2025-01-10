@@ -68,5 +68,10 @@ internal enum IncompatibleFeatures : ushort
     /// <summary>
     /// Ext4 feature for storage of block groups.
     /// </summary>
-    FlexBlockGroups = 0x0200
+    FlexBlockGroups = 0x0200,
+
+    /// <summary>
+    /// Metadata checksum seed stored in super block
+    /// </summary>
+    ChecksumSeed = 0x2000,
 }

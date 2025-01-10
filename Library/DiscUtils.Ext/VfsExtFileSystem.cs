@@ -40,7 +40,8 @@ internal sealed class VfsExtFileSystem : VfsReadOnlyFileSystem<DirEntry, File, D
         | IncompatibleFeatures.FlexBlockGroups
         | IncompatibleFeatures.Extents
         | IncompatibleFeatures.NeedsRecovery
-        | IncompatibleFeatures.SixtyFourBit;
+        | IncompatibleFeatures.SixtyFourBit
+        | IncompatibleFeatures.ChecksumSeed;
 
     private readonly BlockGroup[] _blockGroups;
 
