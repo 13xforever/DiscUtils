@@ -47,8 +47,12 @@ public abstract class VfsFileSystemFactory
     /// <returns>A list of file systems (may be empty).</returns>
     public IEnumerable<FileSystemInfo> Detect(VolumeInfo volume)
     {
-        using Stream stream = volume.Open();
-        return Detect(stream, volume);
+        using var stream = volume.Open();
+
+        foreach (var fs in Detect(stream, volume))
+        {
+            yield return fs;
+        }
     }
 
     /// <summary>
