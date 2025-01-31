@@ -47,7 +47,7 @@ internal class UdifPartitionInfo : PartitionInfo
 
     public override long SectorCount => _block.SectorCount;
 
-    public override string TypeAsString => GetType().FullName;
+    public override string TypeAsString => "UDI";
 
     public override PhysicalVolumeType VolumeType => PhysicalVolumeType.ApplePartition;
 
