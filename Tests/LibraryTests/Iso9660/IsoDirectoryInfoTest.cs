@@ -104,7 +104,10 @@ public class IsoDirectoryInfoTest
 
         var sep = Path.DirectorySeparatorChar;
 
-        Assert.Single(fs.Root.GetDirectories("*.DIR", SearchOption.AllDirectories));
+        var query = fs.Root.GetDirectories("*.DIR", SearchOption.AllDirectories);
+        var result = query.ToList();
+
+        Assert.Single(result);
         Assert.Equal($"A.DIR{sep}", fs.Root.GetDirectories("*.DIR", SearchOption.AllDirectories).First().FullName);
 
         Assert.Single(fs.Root.GetDirectories("GCHILD", SearchOption.AllDirectories));

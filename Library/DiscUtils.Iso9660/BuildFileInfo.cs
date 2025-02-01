@@ -38,8 +38,8 @@ public sealed class BuildFileInfo : BuildDirectoryMember, IEquatable<BuildFileIn
     private readonly string _contentPath;
     private readonly Stream _contentStream;
 
-    internal BuildFileInfo(string name, BuildDirectoryInfo parent, byte[] content)
-        : base(IsoUtilities.NormalizeFileName(name), MakeShortFileName(name))
+    internal BuildFileInfo(ReadOnlyMemory<char> name, BuildDirectoryInfo parent, byte[] content)
+        : base(IsoUtilities.NormalizeFileName(name.Span), MakeShortFileName(name, parent))
     {
         if (content.LongLength >= (4L << 30))
         {
@@ -50,8 +50,8 @@ public sealed class BuildFileInfo : BuildDirectoryMember, IEquatable<BuildFileIn
         _contentData = content;
     }
 
-    internal BuildFileInfo(string name, BuildDirectoryInfo parent, string content)
-        : base(IsoUtilities.NormalizeFileName(name), MakeShortFileName(name))
+    internal BuildFileInfo(ReadOnlyMemory<char> name, BuildDirectoryInfo parent, string content)
+        : base(IsoUtilities.NormalizeFileName(name.Span), MakeShortFileName(name, parent))
     {
         if (new FileInfo(content).Length >= (4L << 30))
         {
@@ -64,8 +64,8 @@ public sealed class BuildFileInfo : BuildDirectoryMember, IEquatable<BuildFileIn
         CreationTime = new FileInfo(_contentPath).LastWriteTimeUtc;
     }
 
-    internal BuildFileInfo(string name, BuildDirectoryInfo parent, Stream source)
-        : base(IsoUtilities.NormalizeFileName(name), MakeShortFileName(name))
+    internal BuildFileInfo(ReadOnlyMemory<char> name, BuildDirectoryInfo parent, Stream source)
+        : base(IsoUtilities.NormalizeFileName(name.Span), MakeShortFileName(name, parent))
     {
         if (source.Length >= (4L << 30))
         {
@@ -122,14 +122,18 @@ public sealed class BuildFileInfo : BuildDirectoryMember, IEquatable<BuildFileIn
         }
     }
 
-    private static string MakeShortFileName(string longName)
+    private static string MakeShortFileName(ReadOnlyMemory<char> longName, BuildDirectoryInfo parent)
     {
-        if (IsoUtilities.IsValidFileName(longName))
+        if (longName.Length <= 30
+            && IsoUtilities.IsValidFileName(longName.Span)
+            && !parent.TryGetMemberByShortName(longName, out _))
         {
-            return longName;
+            return longName.ToString();
         }
 
-        var shortNameChars = longName.ToUpperInvariant().ToCharArray();
+        Span<char> shortNameChars = stackalloc char[longName.Length];
+        longName.Span.ToUpperInvariant(shortNameChars);
+
         for (var i = 0; i < shortNameChars.Length; ++i)
         {
             if (!IsoUtilities.IsValidDChar(shortNameChars[i]) && shortNameChars[i] != '.' && shortNameChars[i] != ';')
@@ -138,7 +142,7 @@ public sealed class BuildFileInfo : BuildDirectoryMember, IEquatable<BuildFileIn
             }
         }
 
-        var parts = IsoUtilities.SplitFileName(new string(shortNameChars));
+        var parts = IsoUtilities.SplitFileName(shortNameChars);
 
         if (parts[0].Length + parts[1].Length > 30)
         {
@@ -150,10 +154,29 @@ public sealed class BuildFileInfo : BuildDirectoryMember, IEquatable<BuildFileIn
             parts[0] = parts[0].Substring(0, 30 - parts[1].Length);
         }
 
-        var candidate = $"{parts[0]}.{parts[1]};{parts[2]}";
+        for (var attempt = 0; attempt < int.MaxValue; attempt++)
+        {
+            if (attempt > 0)
+            {
+                var attemptStr = attempt.ToString(CultureInfo.InvariantCulture);
 
-        // TODO: Make unique
-        return candidate;
+                if (parts[0].Length + attemptStr.Length >= 30)
+                {
+                    parts[0] = parts[0].Remove(parts[0].Length - attemptStr.Length - 1);
+                }
+
+                parts[0] = $"{parts[0]}_{attemptStr}";
+            }
+
+            var candidate = $"{parts[0]}.{parts[1]};{parts[2]}";
+
+            if (!parent.TryGetMemberByShortName(candidate.AsMemory(), out _))
+            {
+                return candidate;
+            }
+        }
+
+        throw new ArgumentException($"Unable to construct a unique short name for '{longName}' in directory {parent.Name}");
     }
 
     internal bool Equals(Stream stream) =>

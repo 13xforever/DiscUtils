@@ -80,7 +80,7 @@ public sealed class CDBuilder : StreamBuilder, IFileSystemBuilder
     {
         _files = [];
         _dirs = [];
-        _rootDirectory = new BuildDirectoryInfo("\0", null);
+        _rootDirectory = new BuildDirectoryInfo("\0".AsMemory(), null);
         _dirs.Add(_rootDirectory);
 
         _buildParams = new BuildParameters
@@ -191,7 +191,7 @@ public sealed class CDBuilder : StreamBuilder, IFileSystemBuilder
     public BuildDirectoryInfo AddDirectory(string name)
     {
         var nameElements = name.AsMemory().TokenEnum('\\', '/', StringSplitOptions.RemoveEmptyEntries).ToArray();
-        return GetDirectory(nameElements, nameElements.Length, true);
+        return GetDirectory(nameElements, nameElements.Length, createMissing: true);
     }
 
     private void AddFile(BuildFileInfo fi)
@@ -219,7 +219,7 @@ public sealed class CDBuilder : StreamBuilder, IFileSystemBuilder
     {
         CheckDirectoryForFilePath(name, out var nameElements, out var dir);
 
-        var fi = new BuildFileInfo(nameElements[nameElements.Length - 1].ToString(), dir, content);
+        var fi = new BuildFileInfo(nameElements[nameElements.Length - 1], dir, content);
         AddFile(fi);
         dir.Add(fi);
         return fi;
@@ -243,7 +243,7 @@ public sealed class CDBuilder : StreamBuilder, IFileSystemBuilder
     {
         CheckDirectoryForFilePath(name, out var nameElements, out var dir);
 
-        var fi = new BuildFileInfo(nameElements[nameElements.Length - 1].ToString(), dir, sourcePath);
+        var fi = new BuildFileInfo(nameElements[nameElements.Length - 1], dir, sourcePath);
         AddFile(fi);
         dir.Add(fi);
         return fi;
@@ -272,7 +272,7 @@ public sealed class CDBuilder : StreamBuilder, IFileSystemBuilder
 
         CheckDirectoryForFilePath(name, out var nameElements, out var dir);
 
-        var fi = new BuildFileInfo(nameElements[nameElements.Length - 1].ToString(), dir, source);
+        var fi = new BuildFileInfo(nameElements[nameElements.Length - 1], dir, source);
         AddFile(fi);
         dir.Add(fi);
         return fi;
@@ -547,14 +547,14 @@ public sealed class CDBuilder : StreamBuilder, IFileSystemBuilder
         var nameElements = path.AsMemory().TokenEnum('\\', '/', StringSplitOptions.RemoveEmptyEntries).ToArray();
         var dir = GetDirectory(nameElements, nameElements.Length - 1, true);
 
-        var name = nameElements[nameElements.Length - 1].ToString();
+        var name = nameElements[nameElements.Length - 1];
 
         if (dir.TryGetMember(name, out var existing))
         {
             return existing;
         }
 
-        name = IsoUtilities.NormalizeFileName(name);
+        name = IsoUtilities.NormalizeFileName(name.Span).AsMemory();
 
         if (dir.TryGetMember(name, out existing))
         {
@@ -569,7 +569,7 @@ public sealed class CDBuilder : StreamBuilder, IFileSystemBuilder
         nameElements = name.AsMemory().TokenEnum('\\', '/', StringSplitOptions.RemoveEmptyEntries).ToArray();
         dir = GetDirectory(nameElements, nameElements.Length - 1, createMissing: true);
 
-        if (dir.TryGetMember(nameElements[nameElements.Length - 1].ToString(), out _))
+        if (dir.TryGetMember(nameElements[nameElements.Length - 1], out _))
         {
             throw new IOException("File already exists");
         }
@@ -589,7 +589,7 @@ public sealed class CDBuilder : StreamBuilder, IFileSystemBuilder
 
         for (var i = 0; i < pathLength; ++i)
         {
-            var name = path[i].ToString();
+            var name = path[i];
 
             if (!focus.TryGetMember(name, out var next))
             {

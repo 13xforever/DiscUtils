@@ -147,7 +147,7 @@ internal class VfsCDReader : VfsReadOnlyFileSystem<ReaderDirEntry, File, ReaderD
                         Context = new IsoContext { VolumeDescriptor = volDesc, DataStream = _data };
                         RootDirectory = new ReaderDirectory(Context,
                             new ReaderDirEntry(Context, volDesc.RootDirectory));
-                        ActiveVariant = Iso9660Variant.Iso9660;
+                        ActiveVariant = Iso9660Variant.Joliet;
                     }
 
                     break;

@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using DiscUtils.Internal;
 using DiscUtils.Streams;
@@ -35,17 +36,30 @@ namespace DiscUtils.Iso9660;
 public sealed class BuildDirectoryInfo : BuildDirectoryMember
 {
     internal static readonly Comparer<BuildDirectoryInfo> PathTableSortComparison = new PathTableComparison();
-    private readonly FastDictionary<BuildDirectoryMember> _members;
+
+    private readonly Dictionary<string, BuildDirectoryMember> _membersLongNames;
+    private readonly Dictionary<string, BuildDirectoryMember> _membersShortNames;
+
+#if NET9_0_OR_GREATER
+    private readonly Dictionary<string, BuildDirectoryMember>.AlternateLookup<ReadOnlySpan<char>> _membersLongNamesAltLookup;
+    private readonly Dictionary<string, BuildDirectoryMember>.AlternateLookup<ReadOnlySpan<char>> _membersShortNamesAltLookup;
+#endif
 
     private readonly BuildDirectoryInfo _parent;
     private List<BuildDirectoryMember> _sortedMembers;
 
-    internal BuildDirectoryInfo(string name, BuildDirectoryInfo parent)
-        : base(name, MakeShortDirName(name))
+    internal BuildDirectoryInfo(ReadOnlyMemory<char> name, BuildDirectoryInfo parent)
+        : base(name.ToString(), MakeShortDirName(name, parent))
     {
         _parent = parent ?? this;
         HierarchyDepth = parent == null ? 0 : parent.HierarchyDepth + 1;
-        _members = new(StringComparer.OrdinalIgnoreCase, entry => entry.Name);
+        _membersLongNames = new(StringComparer.OrdinalIgnoreCase);
+        _membersShortNames = new(StringComparer.OrdinalIgnoreCase);
+
+#if NET9_0_OR_GREATER
+        _membersLongNamesAltLookup = _membersLongNames.GetAlternateLookup<ReadOnlySpan<char>>();
+        _membersShortNamesAltLookup = _membersShortNames.GetAlternateLookup<ReadOnlySpan<char>>();
+#endif
     }
 
     internal int HierarchyDepth { get; }
@@ -61,14 +75,34 @@ public sealed class BuildDirectoryInfo : BuildDirectoryMember
     /// <param name="name">The name of the file or directory to get.</param>
     /// <param name="member">The member found (or <c>null</c>).</param>
     /// <returns><c>true</c> if the specified member was found.</returns>
-    internal bool TryGetMember(string name, out BuildDirectoryMember member)
+    internal bool TryGetMember(ReadOnlyMemory<char> name, out BuildDirectoryMember member)
     {
-        return _members.TryGetValue(name, out member);
+#if NET9_0_OR_GREATER
+        return _membersLongNamesAltLookup.TryGetValue(name.Span, out member);
+#else
+        return _membersLongNames.TryGetValue(name.ToString(), out member);
+#endif
+    }
+
+    /// <summary>
+    /// Gets the specified child directory or file by short name.
+    /// </summary>
+    /// <param name="name">The short name of the file or directory to get.</param>
+    /// <param name="member">The member found (or <c>null</c>).</param>
+    /// <returns><c>true</c> if the specified member was found.</returns>
+    internal bool TryGetMemberByShortName(ReadOnlyMemory<char> name, out BuildDirectoryMember member)
+    {
+#if NET9_0_OR_GREATER
+        return _membersShortNamesAltLookup.TryGetValue(name.Span, out member);
+#else
+        return _membersShortNames.TryGetValue(name.ToString(), out member);
+#endif
     }
 
     internal void Add(BuildDirectoryMember member)
     {
-        _members.Add(member);
+        _membersLongNames.Add(member.Name, member);
+        _membersShortNames.Add(member.ShortName, member);
         _sortedMembers = null;
     }
 
@@ -144,17 +178,28 @@ public sealed class BuildDirectoryInfo : BuildDirectoryMember
             RecordingDateAndTime = m.CreationTime,
             Flags = m is BuildDirectoryInfo ? FileFlags.Directory : FileFlags.None
         };
+
         return dr.WriteTo(buffer, nameEnc);
     }
 
-    private static string MakeShortDirName(string longName)
+    private static string MakeShortDirName(ReadOnlyMemory<char> longName, BuildDirectoryInfo parent)
     {
-        if (IsoUtilities.IsValidDirectoryName(longName))
+        if (parent is null
+            || (longName.Length <= 30
+            && IsoUtilities.IsValidDirectoryName(longName.Span)
+            && !parent.TryGetMemberByShortName(longName, out _)))
         {
-            return longName;
+            return longName.ToString();
         }
 
-        var shortNameChars = longName.ToUpperInvariant().ToCharArray();
+        if (longName.Length > 30)
+        {
+            longName = longName.Slice(0, 30);
+        }
+
+        Span<char> shortNameChars = stackalloc char[longName.Length];
+        longName.Span.ToUpperInvariant(shortNameChars);
+
         for (var i = 0; i < shortNameChars.Length; ++i)
         {
             if (!IsoUtilities.IsValidDChar(shortNameChars[i]) && shortNameChars[i] != '.' && shortNameChars[i] != ';')
@@ -163,14 +208,36 @@ public sealed class BuildDirectoryInfo : BuildDirectoryMember
             }
         }
 
-        return new string(shortNameChars);
+        var shortName = shortNameChars.ToString();
+
+        for (var attempt = 0; attempt < int.MaxValue; attempt++)
+        {
+            if (attempt > 0)
+            {
+                var attemptStr = attempt.ToString(CultureInfo.InvariantCulture);
+
+                if (shortName.Length + attemptStr.Length >= 30)
+                {
+                    shortName = shortName.Remove(shortName.Length - attemptStr.Length - 1);
+                }
+
+                shortName = $"{shortName}_{attemptStr}";
+            }
+
+            if (!parent.TryGetMemberByShortName(shortName.AsMemory(), out _))
+            {
+                return shortName;
+            }
+        }
+
+        throw new ArgumentException($"Unable to construct a unique short name for '{longName}' in directory {parent.Name}");
     }
 
     private List<BuildDirectoryMember> GetSortedMembers()
     {
         if (_sortedMembers == null)
         {
-            var sorted = new List<BuildDirectoryMember>(_members.Values);
+            var sorted = new List<BuildDirectoryMember>(_membersLongNames.Values);
             sorted.Sort(SortedComparison);
             _sortedMembers = sorted;
         }

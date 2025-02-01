@@ -67,7 +67,7 @@ internal struct PathTableRecord
                 byteSwap ? Utilities.BitSwap(LocationOfExtent) : LocationOfExtent);
             IsoUtilities.ToBytesFromUInt16(buffer.Slice(6),
                 byteSwap ? Utilities.BitSwap(ParentDirectoryNumber) : ParentDirectoryNumber);
-            IsoUtilities.WriteString(buffer.Slice(8, nameBytes), false, DirectoryIdentifier, enc);
+            IsoUtilities.WriteString(buffer.Slice(8, nameBytes), pad: false, DirectoryIdentifier.AsSpan(), enc);
             if ((nameBytes & 1) == 1)
             {
                 buffer[8 + nameBytes] = 0;

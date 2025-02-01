@@ -66,7 +66,7 @@ internal static class IsoUtilities
         EndianUtilities.WriteBytesLittleEndian(value, buffer);
     }
 
-    internal static void WriteAChars(Span<byte> buffer, string str)
+    internal static void WriteAChars(Span<byte> buffer, ReadOnlySpan<char> str)
     {
         // Validate string
         if (!IsValidAString(str))
@@ -75,10 +75,10 @@ internal static class IsoUtilities
         }
 
         ////WriteASCII(buffer, offset, numBytes, true, str);
-        WriteString(buffer, true, str, Encoding.ASCII);
+        WriteString(buffer, pad: true, str, Encoding.ASCII);
     }
 
-    internal static void WriteDChars(Span<byte> buffer, string str)
+    internal static void WriteDChars(Span<byte> buffer, ReadOnlySpan<char> str)
     {
         // Validate string
         if (!IsValidDString(str))
@@ -87,10 +87,10 @@ internal static class IsoUtilities
         }
 
         ////WriteASCII(buffer, offset, numBytes, true, str);
-        WriteString(buffer, true, str, Encoding.ASCII);
+        WriteString(buffer, pad: true, str, Encoding.ASCII);
     }
 
-    internal static void WriteA1Chars(Span<byte> buffer, string str, Encoding enc)
+    internal static void WriteA1Chars(Span<byte> buffer, ReadOnlySpan<char> str, Encoding enc)
     {
         // Validate string
         if (!IsValidAString(str))
@@ -101,7 +101,7 @@ internal static class IsoUtilities
         WriteString(buffer, true, str, enc);
     }
 
-    internal static void WriteD1Chars(Span<byte> buffer, string str, Encoding enc)
+    internal static void WriteD1Chars(Span<byte> buffer, ReadOnlySpan<char> str, Encoding enc)
     {
         // Validate string
         if (!IsValidDString(str))
@@ -163,21 +163,17 @@ internal static class IsoUtilities
     }
 #endif
 
-    internal static int WriteString(Span<byte> buffer, bool pad, string str, Encoding enc)
+    internal static int WriteString(Span<byte> buffer, bool pad, ReadOnlySpan<char> str, Encoding enc)
     {
-        return WriteString(buffer, pad, str, enc, false);
+        return WriteString(buffer, pad, str, enc, canTruncate: false);
     }
 
-    internal static int WriteString(Span<byte> buffer, bool pad, string str, Encoding enc,
+    internal static int WriteString(Span<byte> buffer, bool pad, ReadOnlySpan<char> str, Encoding enc,
                                     bool canTruncate)
     {
         var encoder = enc.GetEncoder();
 
-        var paddedString = pad ? str + new string(' ', buffer.Length) : str;
-
-        // Assumption: never less than one byte per character
-
-        encoder.Convert(paddedString.AsSpan(), buffer, false,
+        encoder.Convert(str, buffer, false,
             out var charsUsed, out var bytesUsed, out _);
 
         if (!canTruncate && charsUsed < str.Length)
@@ -185,10 +181,16 @@ internal static class IsoUtilities
             throw new IOException("Failed to write entire string");
         }
 
+        if (pad && bytesUsed < buffer.Length)
+        {
+            buffer.Slice(bytesUsed).Fill((byte)' ');
+            bytesUsed = buffer.Length;
+        }
+
         return bytesUsed;
     }
 
-    internal static bool IsValidAString(string str)
+    internal static bool IsValidAString(ReadOnlySpan<char> str)
     {
         for (var i = 0; i < str.Length; ++i)
         {
@@ -207,7 +209,7 @@ internal static class IsoUtilities
         return true;
     }
 
-    internal static bool IsValidDString(string str)
+    internal static bool IsValidDString(ReadOnlySpan<char> str)
     {
         for (var i = 0; i < str.Length; ++i)
         {
@@ -225,7 +227,7 @@ internal static class IsoUtilities
         return ch is >= '0' and <= '9' or >= 'A' and <= 'Z' or '_';
     }
 
-    internal static bool IsValidFileName(string str)
+    internal static bool IsValidFileName(ReadOnlySpan<char> str)
     {
         for (var i = 0; i < str.Length; ++i)
         {
@@ -240,7 +242,7 @@ str[i] is not (>= '0' and <= '9' or >= 'A' and <= 'Z' or '_' or
         return true;
     }
 
-    internal static bool IsValidDirectoryName(string str)
+    internal static bool IsValidDirectoryName(ReadOnlySpan<char> str)
     {
         if (str.Length == 1 && (str[0] == 0 || str[0] == 1))
         {
@@ -250,29 +252,30 @@ str[i] is not (>= '0' and <= '9' or >= 'A' and <= 'Z' or '_' or
         return IsValidDString(str);
     }
 
-    internal static string NormalizeFileName(string name)
+    internal static string NormalizeFileName(ReadOnlySpan<char> name)
     {
         var parts = SplitFileName(name);
         return $"{parts[0]}.{parts[1]};{parts[2]}";
     }
 
-    internal static string[] SplitFileName(string name)
+    internal static string[] SplitFileName(ReadOnlySpan<char> name)
     {
-        string[] parts = [name, string.Empty, "1"];
+        var parts = new string[3];
 
         if (name.Contains('.'))
         {
             var endOfFilePart = name.IndexOf('.');
-            parts[0] = name.Substring(0, endOfFilePart);
+            parts[0] = name.Slice(0, endOfFilePart).ToString();
             if (name.Contains(';'))
             {
-                var verSep = name.IndexOf(';', endOfFilePart + 1);
-                parts[1] = name.Substring(endOfFilePart + 1, verSep - (endOfFilePart + 1));
-                parts[2] = name.Substring(verSep + 1);
+                var verSep = name.Slice(endOfFilePart + 1).IndexOf(';');
+                parts[1] = name.Slice(endOfFilePart + 1, verSep).ToString();
+                parts[2] = name.Slice(endOfFilePart + 1 + verSep + 1).ToString();
             }
             else
             {
-                parts[1] = name.Substring(endOfFilePart + 1);
+                parts[1] = name.Slice(endOfFilePart + 1).ToString();
+                parts[2] = "1";
             }
         }
         else
@@ -280,17 +283,24 @@ str[i] is not (>= '0' and <= '9' or >= 'A' and <= 'Z' or '_' or
             if (name.Contains(';'))
             {
                 var verSep = name.IndexOf(';');
-                parts[0] = name.Substring(0, verSep);
-                parts[2] = name.Substring(verSep + 1);
+                parts[0] = name.Slice(0, verSep).ToString();
+                parts[1] = "";
+                parts[2] = name.Slice(verSep + 1).ToString();
+            }
+            else
+            {
+                parts[0] = name.ToString();
+                parts[1] = "";
+                parts[2] = "1";
             }
         }
 
         if (!ushort.TryParse(parts[2], out var ver) || ver > 32767 || ver < 1)
         {
             ver = 1;
-        }
 
-        parts[2] = ver.ToString(NumberFormatInfo.InvariantInfo);
+            parts[2] = ver.ToString(NumberFormatInfo.InvariantInfo);
+        }
 
         return parts;
     }

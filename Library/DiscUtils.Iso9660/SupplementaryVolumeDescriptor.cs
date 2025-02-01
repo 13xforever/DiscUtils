@@ -47,8 +47,8 @@ internal class SupplementaryVolumeDescriptor : CommonVolumeDescriptor
     internal override void WriteTo(Span<byte> buffer)
     {
         base.WriteTo(buffer);
-        IsoUtilities.WriteA1Chars(buffer.Slice(8, 32), SystemIdentifier, CharacterEncoding);
-        IsoUtilities.WriteString(buffer.Slice(40, 32), true, VolumeIdentifier, CharacterEncoding, true);
+        IsoUtilities.WriteA1Chars(buffer.Slice(8, 32), SystemIdentifier.AsSpan(), CharacterEncoding);
+        IsoUtilities.WriteString(buffer.Slice(40, 32), pad: true, VolumeIdentifier.AsSpan(), CharacterEncoding, true);
         IsoUtilities.ToBothFromUInt32(buffer.Slice(80), VolumeSpaceSize);
         IsoUtilities.EncodingToBytes(CharacterEncoding, buffer.Slice(88));
         IsoUtilities.ToBothFromUInt16(buffer.Slice(120), VolumeSetSize);
@@ -60,13 +60,13 @@ internal class SupplementaryVolumeDescriptor : CommonVolumeDescriptor
         IsoUtilities.ToBytesFromUInt32(buffer.Slice(148), Utilities.BitSwap(TypeMPathTableLocation));
         IsoUtilities.ToBytesFromUInt32(buffer.Slice(152), Utilities.BitSwap(OptionalTypeMPathTableLocation));
         RootDirectory.WriteTo(buffer.Slice(156), CharacterEncoding);
-        IsoUtilities.WriteD1Chars(buffer.Slice(190, 129), VolumeSetIdentifier, CharacterEncoding);
-        IsoUtilities.WriteA1Chars(buffer.Slice(318, 129), PublisherIdentifier, CharacterEncoding);
-        IsoUtilities.WriteA1Chars(buffer.Slice(446, 129), DataPreparerIdentifier, CharacterEncoding);
-        IsoUtilities.WriteA1Chars(buffer.Slice(574, 129), ApplicationIdentifier, CharacterEncoding);
-        IsoUtilities.WriteD1Chars(buffer.Slice(702, 37), CopyrightFileIdentifier, CharacterEncoding); // FIXME!!
-        IsoUtilities.WriteD1Chars(buffer.Slice(739, 37), AbstractFileIdentifier, CharacterEncoding); // FIXME!!
-        IsoUtilities.WriteD1Chars(buffer.Slice(776, 37), BibliographicFileIdentifier, CharacterEncoding);
+        IsoUtilities.WriteD1Chars(buffer.Slice(190, 129), VolumeSetIdentifier.AsSpan(), CharacterEncoding);
+        IsoUtilities.WriteA1Chars(buffer.Slice(318, 129), PublisherIdentifier.AsSpan(), CharacterEncoding);
+        IsoUtilities.WriteA1Chars(buffer.Slice(446, 129), DataPreparerIdentifier.AsSpan(), CharacterEncoding);
+        IsoUtilities.WriteA1Chars(buffer.Slice(574, 129), ApplicationIdentifier.AsSpan(), CharacterEncoding);
+        IsoUtilities.WriteD1Chars(buffer.Slice(702, 37), CopyrightFileIdentifier.AsSpan(), CharacterEncoding); // ToDo
+        IsoUtilities.WriteD1Chars(buffer.Slice(739, 37), AbstractFileIdentifier.AsSpan(), CharacterEncoding); // ToDo
+        IsoUtilities.WriteD1Chars(buffer.Slice(776, 37), BibliographicFileIdentifier.AsSpan(), CharacterEncoding);
 
         // FIXME!!
         IsoUtilities.ToVolumeDescriptorTimeFromUTC(buffer.Slice(813), CreationDateAndTime);

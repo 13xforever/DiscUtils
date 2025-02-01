@@ -105,7 +105,7 @@ internal class DirectoryRecord
         {
             lengthOfFileIdentifier =
                 (byte)
-                IsoUtilities.WriteString(buffer.Slice(33, (int)(length - 33)), false, FileIdentifier, enc);
+                IsoUtilities.WriteString(buffer.Slice(33, (int)(length - 33)), pad: false, FileIdentifier.AsSpan(), enc);
         }
 
         buffer[32] = lengthOfFileIdentifier;

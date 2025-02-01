@@ -100,7 +100,7 @@ internal class ReaderDirectory : File, IVfsDirectory<ReaderDirEntry, File>
     public ReaderDirEntry GetEntryByName(string name)
     {
         var anyVerMatch = name.IndexOf(';') < 0;
-        var normName = IsoUtilities.NormalizeFileName(name).ToUpper(CultureInfo.InvariantCulture).AsSpan();
+        var normName = IsoUtilities.NormalizeFileName(name.AsSpan()).ToUpper(CultureInfo.InvariantCulture).AsSpan();
         if (anyVerMatch)
         {
             normName = normName.Slice(0, normName.LastIndexOf(';') + 1);
@@ -108,7 +108,7 @@ internal class ReaderDirectory : File, IVfsDirectory<ReaderDirEntry, File>
 
         foreach (var r in _records.Values)
         {
-            var toComp = IsoUtilities.NormalizeFileName(r.FileName).ToUpper(CultureInfo.InvariantCulture);
+            var toComp = IsoUtilities.NormalizeFileName(r.FileName.AsSpan()).ToUpper(CultureInfo.InvariantCulture);
             if (!anyVerMatch && toComp.AsSpan().Equals(normName, StringComparison.CurrentCultureIgnoreCase))
             {
                 return r;
