@@ -32,16 +32,22 @@ public class WindowsOnlyFactAttribute : FactAttribute
     {
         get
         {
+
 #if NET471_OR_GREATER || NETCOREAPP || NETSTANDARD
+
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 return "This test runs on Windows only";
             }
 
             return null;
-#endif
+
+#else
 
             return "This test runs on Windows with .NET Framework 4.7.1, .NET Core or .NET Standard only";
+
+#endif
+
         }
         set => throw new NotSupportedException();
     }

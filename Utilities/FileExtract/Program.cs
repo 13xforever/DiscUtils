@@ -99,7 +99,8 @@ class Program : ProgramBase
              ?? throw new DriveNotFoundException("No supported file system found");
 
         using var fs = fsInfo.Open(volInfo, FileSystemParameters);
-        using Stream source = fs.OpenFile(_inFilePath.Value, FileMode.Open, FileAccess.Read);
+        using var source = fs.OpenFile(_inFilePath.Value, FileMode.Open, FileAccess.Read);
+        
         using (var outFile = new FileStream(_outFilePath.Value, FileMode.Create, FileAccess.ReadWrite, FileShare.Delete, bufferSize: 2 << 20))
         {
             source.CopyTo(outFile);
