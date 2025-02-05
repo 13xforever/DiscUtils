@@ -906,7 +906,7 @@ public sealed class DiskImageFile : VirtualDiskLayer
 
     private LogSequence FindActiveLogSequence()
     {
-        using Stream logStream =
+        using var logStream =
                 new CircularStream(new SubStream(_fileStream, (long)_header.LogOffset, _header.LogLength),
                     Ownership.Dispose);
         var candidateActiveSequence = new LogSequence();

@@ -67,7 +67,7 @@ public class ZeroStream : MappedStream
 
     public override IEnumerable<StreamExtent> MapContent(long start, long length)
     {
-        return Array.Empty<StreamExtent>();
+        return [];
     }
 
     public override void Flush() {}

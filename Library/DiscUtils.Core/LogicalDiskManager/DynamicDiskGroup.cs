@@ -235,7 +235,7 @@ internal class DynamicDiskGroup : IDiagnosticTraceable
         return status;
     }
 
-    private SparseStream OpenExtent(ExtentRecord extent)
+    private SubStream OpenExtent(ExtentRecord extent)
     {
         var disk = _database.GetDisk(extent.DiskId);
 

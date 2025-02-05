@@ -39,10 +39,10 @@ internal class FileSystemFactory : VfsFileSystemFactory
             return SingleValueEnumerable.Get(new VfsFileSystemInfo("Swap", "Linux Swap", Open));
         }
 
-        return Enumerable.Empty<FileSystemInfo>();
+        return [];
     }
 
-    private DiscFileSystem Open(Stream stream, VolumeInfo volumeInfo, FileSystemParameters parameters)
+    private SwapFileSystem Open(Stream stream, VolumeInfo volumeInfo, FileSystemParameters parameters)
     {
         return new SwapFileSystem(stream);
     }

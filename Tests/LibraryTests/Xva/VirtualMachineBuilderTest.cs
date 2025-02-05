@@ -69,7 +69,7 @@ public class VirtualMachineBuilderTest
         Assert.Single(disks);
         Assert.Equal(10 * 1024 * 1024, disks[0].Capacity);
 
-        Stream diskContent = disks[0].Content;
+        var diskContent = disks[0].Content;
         for (var i = 0; i < 1024 * 1024; ++i)
         {
             diskContent.Position = i * 10;

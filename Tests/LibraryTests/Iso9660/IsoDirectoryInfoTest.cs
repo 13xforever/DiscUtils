@@ -34,7 +34,7 @@ public class IsoDirectoryInfoTest
     public void Exists()
     {
         var builder = new CDBuilder();
-        builder.AddFile(@"SOMEDIR\CHILDDIR\FILE.TXT", Array.Empty<byte>());
+        builder.AddFile(@"SOMEDIR\CHILDDIR\FILE.TXT", []);
         var fs = new CDReader(builder.Build(), false);
 
         Assert.True(fs.GetDirectoryInfo(@"\").Exists);
@@ -64,7 +64,7 @@ public class IsoDirectoryInfoTest
         var sep = Path.DirectorySeparatorChar;
 
         var builder = new CDBuilder();
-        builder.AddFile($"SOMEDIR{sep}CHILDDIR{sep}GCHILDIR{sep}FILE.TXT", Array.Empty<byte>());
+        builder.AddFile($"SOMEDIR{sep}CHILDDIR{sep}GCHILDIR{sep}FILE.TXT", []);
         var fs = new CDReader(builder.Build(), false);
 
         var di = fs.GetDirectoryInfo($"SOMEDIR{sep}CHILDDIR");

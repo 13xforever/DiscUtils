@@ -37,7 +37,7 @@ public class CommandLineSwitch
 
     public CommandLineSwitch(string fullSwitch, string paramName, string description)
     {
-        _shortSwitches = Array.Empty<string>();
+        _shortSwitches = [];
         _fullSwitch = fullSwitch;
         _paramName = paramName;
         _description = description;

@@ -11,6 +11,7 @@
     <AssemblyOriginatorKeyFile>../../SigningKey.snk</AssemblyOriginatorKeyFile>
     <SkipDefaultAdapters>true</SkipDefaultAdapters>
     <DisableSharedTestHost>true</DisableSharedTestHost>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

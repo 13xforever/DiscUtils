@@ -288,11 +288,11 @@ public class NativeFileSystem : DiscFileSystem
         }
         catch (IOException)
         {
-            return Enumerable.Empty<string>();
+            return [];
         }
         catch (UnauthorizedAccessException)
         {
-            return Enumerable.Empty<string>();
+            return [];
         }
     }
 
@@ -338,11 +338,11 @@ public class NativeFileSystem : DiscFileSystem
         }
         catch (IOException)
         {
-            return Enumerable.Empty<string>();
+            return [];
         }
         catch (UnauthorizedAccessException)
         {
-            return Enumerable.Empty<string>();
+            return [];
         }
     }
 
@@ -376,11 +376,11 @@ public class NativeFileSystem : DiscFileSystem
         }
         catch (IOException)
         {
-            return Enumerable.Empty<string>();
+            return [];
         }
         catch (UnauthorizedAccessException)
         {
-            return Enumerable.Empty<string>();
+            return [];
         }
     }
 

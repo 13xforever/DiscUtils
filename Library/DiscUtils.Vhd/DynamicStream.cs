@@ -937,7 +937,7 @@ public class DynamicStream : MappedStream
         var maxCount = Math.Min(Length, start + count) - start;
         if (maxCount < 0)
         {
-            return Array.Empty<StreamExtent>();
+            return [];
         }
 
         var parentExtents = _parentStream.GetExtentsInRange(start, maxCount);

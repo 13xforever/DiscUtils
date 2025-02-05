@@ -29,18 +29,22 @@ using System.Collections.Generic;
 using System.IO;
 using Xunit;
 
+#pragma warning disable IDE0079 // Remove unnecessary suppression
+#pragma warning disable xUnit1042 // The member referenced by the MemberData attribute returns untyped data rows
+
 namespace LibraryTests.HfsPlus;
 
 public class HfsPlusTest
 {
-    private const string SystemVersionPath = @"System\Library\CoreServices\SystemVersion.plist";
-    private const string DeviceSupportPath = "/Applications/Xcode.app/Content/Developer/Platforms/iPhoneOS.Platform/DeviceSupport/";
     static HfsPlusTest()
     {
         SetupHelper.RegisterAssembly(typeof(HfsPlusFileSystem).Assembly);
     }
 
 #if NETCOREAPP
+    private const string SystemVersionPath = @"System\Library\CoreServices\SystemVersion.plist";
+    private const string DeviceSupportPath = "/Applications/Xcode.app/Content/Developer/Platforms/iPhoneOS.Platform/DeviceSupport/";
+
     public static IEnumerable<object[]> GetDeveloperDiskImages()
     {
         if (!Directory.Exists(DeviceSupportPath))
@@ -72,7 +76,7 @@ public class HfsPlusTest
             using var hfs = (HfsPlusFileSystem)fileSystem.Open(volume);
             Assert.True(hfs.FileExists(SystemVersionPath));
 
-            using Stream systemVersionStream = hfs.OpenFile(SystemVersionPath, FileMode.Open, FileAccess.Read);
+            using var systemVersionStream = hfs.OpenFile(SystemVersionPath, FileMode.Open, FileAccess.Read);
             using var copyStream = new MemoryStream();
             Assert.NotEqual(0, systemVersionStream.Length);
             systemVersionStream.CopyTo(copyStream);

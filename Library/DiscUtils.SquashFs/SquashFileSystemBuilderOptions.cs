@@ -32,7 +32,7 @@ public sealed class SquashFileSystemBuilderOptions
     /// <summary>
     /// Default options for building a SquashFs file system.
     /// </summary>
-    public static SquashFileSystemBuilderOptions Default = new();
+    public static SquashFileSystemBuilderOptions Default { get; } = new();
 
 
     /// <summary>

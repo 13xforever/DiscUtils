@@ -152,6 +152,6 @@ internal class Mode2Buffer : Streams.Buffer
             return SingleValueEnumerable.Get(new StreamExtent(start, end - start));
         }
 
-        return Enumerable.Empty<StreamExtent>();
+        return [];
     }
 }

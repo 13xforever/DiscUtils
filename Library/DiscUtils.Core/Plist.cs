@@ -124,7 +124,7 @@ internal static class Plist
         throw new NotImplementedException();
     }
 
-    private static XmlNode CreateDictionary(XmlDocument xmlDoc, Dictionary<string, object> dict)
+    private static XmlElement CreateDictionary(XmlDocument xmlDoc, Dictionary<string, object> dict)
     {
         var dictNode = xmlDoc.CreateElement("dict");
 
@@ -167,7 +167,7 @@ internal static class Plist
         return result;
     }
 
-    private static object ParseArray(XmlNode xmlNode)
+    private static List<object> ParseArray(XmlNode xmlNode)
     {
         var result = new List<object>();
 
@@ -181,18 +181,18 @@ internal static class Plist
         return result;
     }
 
-    private static object ParseString(XmlNode xmlNode)
+    private static string ParseString(XmlNode xmlNode)
     {
         return xmlNode.InnerText;
     }
 
-    private static object ParseData(XmlNode xmlNode)
+    private static byte[] ParseData(XmlNode xmlNode)
     {
         var base64 = xmlNode.InnerText;
         return Convert.FromBase64String(base64);
     }
 
-    private static object ParseInteger(XmlNode xmlNode)
+    private static int ParseInteger(XmlNode xmlNode)
     {
         return int.Parse(xmlNode.InnerText, CultureInfo.InvariantCulture);
     }

@@ -69,9 +69,9 @@ public sealed class VirtualDiskPSDriveInfo : PSDriveInfo
 
         foreach (var volInfo in newVolMgr.GetLogicalVolumes())
         {
-            if (_fsCache.ContainsKey(volInfo.Identity))
+            if (_fsCache.TryGetValue(volInfo.Identity, out var fs))
             {
-                newFsCache.Add(volInfo.Identity, _fsCache[volInfo.Identity]);
+                newFsCache.Add(volInfo.Identity, fs);
                 deadFileSystems.Remove(volInfo.Identity);
             }
         }

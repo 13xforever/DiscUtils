@@ -41,7 +41,7 @@ public class WimFileSystem : ReadOnlyDiscFileSystem, IWindowsFileSystem
 {
     private readonly ObjectCache<long, List<DirectoryEntry>> _dirCache;
     private WimFile _file;
-    private Stream _metaDataStream;
+    private SparseStream _metaDataStream;
     private long _rootDirPos;
     private List<RawSecurityDescriptor> _securityDescriptors;
 
@@ -112,7 +112,7 @@ public class WimFileSystem : ReadOnlyDiscFileSystem, IWindowsFileSystem
         var hdr = _file.LocateResource(dirEntry.Hash)
             ?? throw new IOException("No reparse point");
 
-        using Stream s = _file.OpenResourceStream(hdr);
+        using var s = _file.OpenResourceStream(hdr);
         var buffer = new byte[s.Length];
         s.ReadExactly(buffer, 0, buffer.Length);
         return new ReparsePoint((int)dirEntry.ReparseTag, buffer);

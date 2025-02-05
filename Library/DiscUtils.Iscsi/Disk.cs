@@ -121,7 +121,7 @@ public class Disk : VirtualDisk
             // We detect the geometry (which will return a sensible default if the disk has no partitions).
             // We don't rely on asking the iSCSI target for the geometry because frequently values are returned
             // that are not valid as BIOS disk geometries.
-            Stream stream = Content;
+            var stream = Content;
             var pos = stream.Position;
 
             var result = BiosPartitionTable.DetectGeometry(stream);

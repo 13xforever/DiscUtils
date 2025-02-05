@@ -91,7 +91,7 @@ public class TarFileBuilder : StreamBuilder
             name += "/";
         }
 
-        AddFile(name, Array.Empty<byte>());
+        AddFile(name, []);
     }
 
     /// <summary>
@@ -110,7 +110,7 @@ public class TarFileBuilder : StreamBuilder
             name += "/";
         }
 
-        AddFile(name, Array.Empty<byte>(), ownerId, groupId, fileMode, modificationTime);
+        AddFile(name, [], ownerId, groupId, fileMode, modificationTime);
     }
 
     /// <summary>

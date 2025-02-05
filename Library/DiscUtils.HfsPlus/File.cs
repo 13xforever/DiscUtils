@@ -234,7 +234,7 @@ internal class File : IVfsFileWithStreams
                 case FileCompressionType.ZlibAttribute:
                 case FileCompressionType.RawAttribute:
                     // Inline
-                    return Enumerable.Empty<StreamExtent>();
+                    return [];
 
                 case FileCompressionType.ZlibResource:
                     // The data is stored in the resource fork.

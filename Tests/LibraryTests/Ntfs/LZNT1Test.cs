@@ -28,7 +28,7 @@ using Xunit;
 
 namespace LibraryTests.Ntfs;
 
-public class LZNT1Test
+public partial class LZNT1Test
 {
     private byte[] _uncompressedData;
 
@@ -61,7 +61,7 @@ public class LZNT1Test
     public void Compress()
     {
         var instance = new LZNT1();
-        var compressor = (BlockCompressor)instance;
+        var compressor = instance;
 
         var compressedLength = 16 * 4096;
         var compressedData = new byte[compressedLength];
@@ -82,7 +82,7 @@ public class LZNT1Test
     public void CompressMidSourceBuffer()
     {
         var instance = new LZNT1();
-        var compressor = (BlockCompressor)instance;
+        var compressor = instance;
 
         var inData = new byte[128 * 1024];
         Buffer.BlockCopy(_uncompressedData, 0, inData, 32 * 1024, 64 * 1024);
@@ -104,7 +104,7 @@ public class LZNT1Test
     public void CompressMidDestBuffer()
     {
         var instance = new LZNT1();
-        var compressor = (BlockCompressor)instance;
+        var compressor = instance;
 
         // Double-check, make sure native code round-trips
         var nativeCompressed = NativeCompress(_uncompressedData, 0, _uncompressedData.Length, 4096);
@@ -125,7 +125,7 @@ public class LZNT1Test
     public void Compress1KBlockSize()
     {
         var instance = new LZNT1();
-        var compressor = (BlockCompressor)instance;
+        var compressor = instance;
 
         var compressedLength = 16 * 4096;
         var compressedData = new byte[compressedLength];
@@ -153,7 +153,7 @@ public class LZNT1Test
     public void Compress1KBlock()
     {
         var instance = new LZNT1();
-        var compressor = (BlockCompressor)instance;
+        var compressor = instance;
 
         var uncompressed1K = new byte[1024];
         Buffer.BlockCopy(_uncompressedData, 0, uncompressed1K, 0, 1024);
@@ -175,7 +175,7 @@ public class LZNT1Test
     public void CompressAllZeros()
     {
         var instance = new LZNT1();
-        var compressor = (BlockCompressor)instance;
+        var compressor = instance;
 
         var compressed = new byte[64 * 1024];
         var numCompressed = 64 * 1024;
@@ -186,7 +186,7 @@ public class LZNT1Test
     public void CompressIncompressible()
     {
         var instance = new LZNT1();
-        var compressor = (BlockCompressor)instance;
+        var compressor = instance;
 
         var rng = new Random(6324);
         var uncompressed = new byte[64 * 1024];
@@ -201,7 +201,7 @@ public class LZNT1Test
     public void Decompress()
     {
         var instance = new LZNT1();
-        var compressor = (BlockCompressor)instance;
+        var compressor = instance;
 
         var compressed = NativeCompress(_uncompressedData, 0, _uncompressedData.Length, 4096);
 
@@ -219,7 +219,7 @@ public class LZNT1Test
     public void DecompressMidSourceBuffer()
     {
         var instance = new LZNT1();
-        var compressor = (BlockCompressor)instance;
+        var compressor = instance;
 
         var compressed = NativeCompress(_uncompressedData, 0, _uncompressedData.Length, 4096);
 
@@ -240,7 +240,7 @@ public class LZNT1Test
     public void DecompressMidDestBuffer()
     {
         var instance = new LZNT1();
-        var compressor = (BlockCompressor)instance;
+        var compressor = instance;
 
         var compressed = NativeCompress(_uncompressedData, 0, _uncompressedData.Length, 4096);
 
@@ -260,7 +260,7 @@ public class LZNT1Test
     public void Decompress1KBlockSize()
     {
         var instance = new LZNT1();
-        var compressor = (BlockCompressor)instance;
+        var compressor = instance;
 
         var compressed = NativeCompress(_uncompressedData, 0, _uncompressedData.Length, 1024);
 
@@ -353,6 +353,16 @@ public class LZNT1Test
         }
     }
 
+#if NET7_0_OR_GREATER
+    [LibraryImport("ntdll")]
+    private static partial int RtlGetCompressionWorkSpaceSize(ushort formatAndEngine, out uint bufferWorkspaceSize, out uint fragmentWorkspaceSize);
+
+    [LibraryImport("ntdll")]
+    private static partial int RtlCompressBuffer(ushort formatAndEngine, IntPtr uncompressedBuffer, uint uncompressedBufferSize, IntPtr compressedBuffer, uint compressedBufferSize, uint uncompressedChunkSize, out uint finalCompressedSize, IntPtr workspace);
+
+    [LibraryImport("ntdll")]
+    private static partial int RtlDecompressBuffer(ushort formatAndEngine, IntPtr uncompressedBuffer, uint uncompressedBufferSize, IntPtr compressedBuffer, uint compressedBufferSize, out uint finalUncompressedSize);
+#else
     [DllImport("ntdll")]
     private static extern int RtlGetCompressionWorkSpaceSize(ushort formatAndEngine, out uint bufferWorkspaceSize, out uint fragmentWorkspaceSize);
 
@@ -361,4 +371,5 @@ public class LZNT1Test
 
     [DllImport("ntdll")]
     private static extern int RtlDecompressBuffer(ushort formatAndEngine, IntPtr uncompressedBuffer, uint uncompressedBufferSize, IntPtr compressedBuffer, uint compressedBufferSize, out uint finalUncompressedSize);
+#endif
 }

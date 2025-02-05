@@ -61,7 +61,7 @@ public class InvalidFileSystemException : IOException
 #if !NETCOREAPP
     [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
 #elif NET8_0_OR_GREATER
-    [Obsolete]
+    [Obsolete("Binary serialization deprecated")]
 #endif
     protected InvalidFileSystemException(SerializationInfo info, StreamingContext context)
         : base(info, context)

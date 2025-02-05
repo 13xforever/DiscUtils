@@ -47,7 +47,11 @@ public sealed class DiskParameters
         if (genericParameters.ExtendedParameters.TryGetValue(Disk.ExtendedParameterKeyCreateType,
                                  out var stringCreateType))
         {
+#if NETCOREAPP || NETSTANDARD2_1_OR_GREATER
+            CreateType = Enum.Parse<DiskCreateType>(stringCreateType);
+#else
             CreateType = (DiskCreateType)Enum.Parse(typeof(DiskCreateType), stringCreateType);
+#endif
         }
         else
         {
@@ -63,7 +67,11 @@ public sealed class DiskParameters
             if (genericParameters.ExtendedParameters.TryGetValue(Disk.ExtendedParameterKeyAdapterType,
                                      out var stringAdapterType))
             {
+#if NETCOREAPP || NETSTANDARD2_1_OR_GREATER
+                AdapterType = Enum.Parse<DiskAdapterType>(stringAdapterType);
+#else
                 AdapterType = (DiskAdapterType)Enum.Parse(typeof(DiskAdapterType), stringAdapterType);
+#endif
 
                 // Don't refining sub-type of SCSI actually select IDE
                 if (AdapterType == DiskAdapterType.Ide)

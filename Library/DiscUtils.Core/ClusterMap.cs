@@ -87,7 +87,7 @@ public sealed class ClusterMap
             return FileIdToPaths(fileId);
         }
 
-        return Array.Empty<string>();
+        return [];
     }
 
     /// <summary>
@@ -104,6 +104,6 @@ public sealed class ClusterMap
             return paths;
         }
 
-        return Array.Empty<string>();
+        return [];
     }
 }

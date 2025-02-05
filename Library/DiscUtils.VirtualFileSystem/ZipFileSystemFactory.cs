@@ -38,10 +38,10 @@ internal class ZipFileSystemFactory : VfsFileSystemFactory
             return SingleValueEnumerable.Get(new VfsFileSystemInfo("ZIP", "ZIP", Open));
         }
 
-        return Enumerable.Empty<FileSystemInfo>();
+        return [];
     }
 
-    private DiscFileSystem Open(System.IO.Stream stream, VolumeInfo volumeInfo, FileSystemParameters parameters)
+    private ZipFileSystem Open(System.IO.Stream stream, VolumeInfo volumeInfo, FileSystemParameters parameters)
     {
         return new ZipFileSystem(stream, "ZIP", ownsStream: true);
     }

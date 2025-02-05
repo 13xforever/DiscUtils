@@ -100,7 +100,7 @@ public class IsoFileSystemTest
 
         for (var i = 0; i < 3000; ++i)
         {
-            builder.AddFile($"FILE{i}.TXT", Array.Empty<byte>());
+            builder.AddFile($"FILE{i}.TXT", []);
         }
 
         var reader = new CDReader(builder.Build(), true);
@@ -115,7 +115,7 @@ public class IsoFileSystemTest
         {
             UseJoliet = true
         };
-        builder.AddFile("FILE.TXT;1", Array.Empty<byte>());
+        builder.AddFile("FILE.TXT;1", []);
 
         var ms = new MemoryStream();
         SparseStream.Pump(builder.Build(), ms);

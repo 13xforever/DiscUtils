@@ -31,15 +31,24 @@ public abstract class GenericAcl : ICollection
 
     public void CopyTo(GenericAce[] array, int index)
     {
+#if NET6_0_OR_GREATER
+        ArgumentNullException.ThrowIfNull(array);
+#else
         if (array == null)
         {
             throw new ArgumentNullException(nameof(array));
         }
+#endif
 
+#if NET8_0_OR_GREATER
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+        ArgumentOutOfRangeException.ThrowIfLessThan(array.Length - index, Count);
+#else
         if (index < 0 || array.Length - index < Count)
         {
             throw new ArgumentOutOfRangeException(nameof(index), "Index must be non-negative integer and must not exceed array length - count");
         }
+#endif
 
         for (var i = 0; i < Count; i++)
         {

@@ -92,7 +92,7 @@ public abstract class ProgramBase
     };
 
     protected abstract StandardSwitches DefineCommandLine(CommandLineParser parser);
-    protected virtual string[] HelpRemarks => Array.Empty<string>();
+    protected virtual string[] HelpRemarks => [];
     protected abstract void DoRun();
 
     protected void Run(string[] args)

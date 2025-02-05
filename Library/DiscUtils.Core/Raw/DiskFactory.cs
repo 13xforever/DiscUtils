@@ -30,7 +30,7 @@ namespace DiscUtils.Raw;
 [VirtualDiskFactory("RAW", ".img,.ima,.vfd,.flp,.bif")]
 internal sealed class DiskFactory : VirtualDiskFactory
 {
-    public override string[] Variants => Array.Empty<string>();
+    public override string[] Variants => [];
 
     public override VirtualDiskTypeInfo GetDiskTypeInformation(string variant)
     {

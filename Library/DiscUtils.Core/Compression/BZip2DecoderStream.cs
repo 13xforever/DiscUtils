@@ -39,7 +39,7 @@ namespace DiscUtils.Compression;
 /// </summary>
 public sealed class BZip2DecoderStream : ReadOnlyCompatibilityStream
 {
-    private readonly BitStream _bitstream;
+    private readonly BigEndianBitStream _bitstream;
 
     private readonly byte[] _blockBuffer;
     private uint _blockCrc;

@@ -168,7 +168,7 @@ public sealed class DiskImageFile : VirtualDiskLayer
     /// </summary>
     /// <param name="disk">The disk to detect the geometry of.</param>
     /// <returns>The geometry of the disk.</returns>
-    private static Geometry DetectGeometry(Stream disk)
+    private static Geometry DetectGeometry(SparseStream disk)
     {
         var capacity = disk.Length;
 

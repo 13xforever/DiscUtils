@@ -40,10 +40,10 @@ internal class FileSystemFactory : VfsFileSystemFactory
             return SingleValueEnumerable.Get(new VfsFileSystemInfo("xfs", "Linux xfs family filesystem", Open));
         }
 
-        return Enumerable.Empty<DiscUtils.FileSystemInfo>();
+        return [];
     }
 
-    private DiscFileSystem Open(Stream stream, VolumeInfo volumeInfo, FileSystemParameters parameters)
+    private XfsFileSystem Open(Stream stream, VolumeInfo volumeInfo, FileSystemParameters parameters)
     {
         return new XfsFileSystem(stream, parameters);
     }

@@ -100,7 +100,7 @@ internal class ExtentData : BaseItem
 
         if (Type == ExtentDataType.Inline)
         {
-            InlineData = EndianUtilities.ToByteArray(buffer.Slice(0x15, buffer.Length - (0x15)));
+            InlineData = EndianUtilities.ToByteArray(buffer.Slice(0x15));
         }
         else
         {

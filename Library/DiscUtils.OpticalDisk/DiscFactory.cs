@@ -30,7 +30,7 @@ namespace DiscUtils.OpticalDisk;
 [VirtualDiskFactory("Optical", ".iso,.bin")]
 internal sealed class DiscFactory : VirtualDiskFactory
 {
-    public override string[] Variants => Array.Empty<string>();
+    public override string[] Variants => [];
 
     public override VirtualDiskTypeInfo GetDiskTypeInformation(string variant)
     {

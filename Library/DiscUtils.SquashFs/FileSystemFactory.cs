@@ -39,10 +39,10 @@ internal class FileSystemFactory : VfsFileSystemFactory
             return SingleValueEnumerable.Get(new VfsFileSystemInfo("SquashFS", "Squash Filesystem", Open));
         }
 
-        return Enumerable.Empty<FileSystemInfo>();
+        return [];
     }
 
-    private DiscFileSystem Open(Stream stream, VolumeInfo volumeInfo, FileSystemParameters parameters)
+    private SquashFileSystemReader Open(Stream stream, VolumeInfo volumeInfo, FileSystemParameters parameters)
     {
         return new SquashFileSystemReader(stream);
     }

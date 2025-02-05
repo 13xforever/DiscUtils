@@ -67,7 +67,7 @@ public class DiskTest
     [Fact]
     public void InitializeDynamic()
     {
-        DiscFileSystem fs = new InMemoryFileSystem();
+        var fs = new InMemoryFileSystem();
         using (var disk = Disk.Initialize(fs, "a.vmdk", 16 * 1024L * 1024 * 1024, DiskCreateType.MonolithicSparse))
         {
             Assert.NotNull(disk);
@@ -95,7 +95,7 @@ public class DiskTest
     {
         var sep = Path.DirectorySeparatorChar;
 
-        DiscFileSystem fs = new InMemoryFileSystem();
+        var fs = new InMemoryFileSystem();
 
         var baseFile = DiskImageFile.Initialize(fs, $"{sep}base{sep}base.vmdk", 16 * 1024L * 1024 * 1024, DiskCreateType.MonolithicSparse);
         using (var disk = Disk.InitializeDifferencing(fs, $"{sep}diff{sep}diff.vmdk", DiskCreateType.MonolithicSparse, $"{sep}base{sep}base.vmdk"))
@@ -120,7 +120,7 @@ public class DiskTest
     [Fact]
     public void InitializeDifferencingRelPath()
     {
-        DiscFileSystem fs = new InMemoryFileSystem();
+        var fs = new InMemoryFileSystem();
 
         var sep = Path.DirectorySeparatorChar;
 

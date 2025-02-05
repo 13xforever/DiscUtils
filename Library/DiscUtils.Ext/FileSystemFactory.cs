@@ -39,10 +39,10 @@ internal class FileSystemFactory : VfsFileSystemFactory
             return SingleValueEnumerable.Get(new VfsFileSystemInfo("ext", "Linux ext family filesystem", Open));
         }
 
-        return Enumerable.Empty<FileSystemInfo>();
+        return [];
     }
 
-    private DiscFileSystem Open(Stream stream, VolumeInfo volumeInfo, FileSystemParameters parameters)
+    private ExtFileSystem Open(Stream stream, VolumeInfo volumeInfo, FileSystemParameters parameters)
     {
         return new ExtFileSystem(stream, parameters);
     }

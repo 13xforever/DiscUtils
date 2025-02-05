@@ -536,7 +536,7 @@ internal class IndexNode
         return midEntry;
     }
 
-    private void SetEntries(IList<IndexEntry> newEntries, int offset, int count)
+    private void SetEntries(List<IndexEntry> newEntries, int offset, int count)
     {
         _entries.Clear();
         for (var i = 0; i < count; ++i)

@@ -36,7 +36,7 @@ namespace DiscUtils.Compression;
 internal class XpressStream : ReadOnlyCompatibilityStream
 {
     private readonly byte[] _buffer;
-    private readonly Stream _compressedStream;
+    private readonly BufferedStream _compressedStream;
     private long _position;
 
     /// <summary>

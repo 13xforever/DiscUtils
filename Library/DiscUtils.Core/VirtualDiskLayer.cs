@@ -108,8 +108,7 @@ public abstract class VirtualDiskLayer : IDisposable
     /// Gets the possible locations of the parent file (if any).
     /// </summary>
     /// <returns>Array of strings, empty if no parent.</returns>
-    public virtual IEnumerable<string> GetParentLocations() =>
-        Enumerable.Empty<string>();
+    public virtual IEnumerable<string> GetParentLocations() => [];
 
     /// <summary>
     /// Disposes of underlying resources.

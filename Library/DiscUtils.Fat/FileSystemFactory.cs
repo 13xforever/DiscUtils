@@ -39,10 +39,10 @@ internal class FileSystemFactory : VfsFileSystemFactory
             return SingleValueEnumerable.Get(new VfsFileSystemInfo("FAT", "Microsoft FAT", Open));
         }
 
-        return Enumerable.Empty<FileSystemInfo>();
+        return [];
     }
 
-    private DiscFileSystem Open(Stream stream, VolumeInfo volumeInfo, FileSystemParameters parameters)
+    private FatFileSystem Open(Stream stream, VolumeInfo volumeInfo, FileSystemParameters parameters)
     {
         return new FatFileSystem(stream, Ownership.None, parameters);
     }

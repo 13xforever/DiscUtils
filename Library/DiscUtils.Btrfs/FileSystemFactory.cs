@@ -39,10 +39,10 @@ internal class FileSystemFactory : VfsFileSystemFactory
             return SingleValueEnumerable.Get(new VfsFileSystemInfo("btrfs", "Btrfs filesystem", Open));
         }
 
-        return Enumerable.Empty<FileSystemInfo>();
+        return [];
     }
 
-    private DiscFileSystem Open(Stream stream, VolumeInfo volumeInfo, FileSystemParameters parameters)
+    private BtrfsFileSystem Open(Stream stream, VolumeInfo volumeInfo, FileSystemParameters parameters)
     {
         return new BtrfsFileSystem(stream);
     }

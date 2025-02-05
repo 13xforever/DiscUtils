@@ -771,7 +771,7 @@ public partial class VirtualFileSystem : DiscFileSystem, IWindowsFileSystem, IUn
         file.SetStandardInformation(info);
     }
 
-    public virtual IEnumerable<string> GetAlternateDataStreams(string path) => Enumerable.Empty<string>();
+    public virtual IEnumerable<string> GetAlternateDataStreams(string path) => [];
 
     public virtual bool HasHardLinks(string path) => false;
 

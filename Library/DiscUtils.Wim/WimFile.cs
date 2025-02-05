@@ -171,7 +171,7 @@ public class WimFile
     private void ReadResourceTable()
     {
         _resources = [];
-        using Stream s = OpenResourceStream(_fileHeader.OffsetTableHeader);
+        using var s = OpenResourceStream(_fileHeader.OffsetTableHeader);
         long numRead = 0;
         Span<byte> resBuffer = stackalloc byte[ResourceInfo.Size];
         while (numRead < s.Length)

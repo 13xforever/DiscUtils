@@ -33,7 +33,7 @@ public class IsoFileInfoTest
     public void Length()
     {
         var builder = new CDBuilder();
-        builder.AddFile(@"FILE.TXT", Array.Empty<byte>());
+        builder.AddFile(@"FILE.TXT", []);
         builder.AddFile(@"FILE2.TXT", new byte[1]);
         builder.AddFile(@"FILE3.TXT", new byte[10032]);
         builder.AddFile(@"FILE3.TXT;2", new byte[132]);

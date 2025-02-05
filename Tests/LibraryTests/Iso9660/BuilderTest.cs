@@ -46,7 +46,7 @@ public class BuilderTest
     public void AddFileBytes()
     {
         var builder = new CDBuilder();
-        builder.AddFile(@"ADIR\AFILE.TXT", System.Array.Empty<byte>());
+        builder.AddFile(@"ADIR\AFILE.TXT", []);
         var fs = new CDReader(builder.Build(), false);
 
         Assert.True(fs.Exists(@"ADIR\AFILE.TXT"));
@@ -100,7 +100,7 @@ public class BuilderTest
 
         var builder = new CDBuilder();
 
-        builder.AddFile(testPath, System.Array.Empty<byte>());
+        builder.AddFile(testPath, []);
 
         Assert.Throws<InvalidOperationException>(() => builder.Build(new MemoryStream()));
     }

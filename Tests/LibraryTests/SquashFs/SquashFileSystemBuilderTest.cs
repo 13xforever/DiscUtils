@@ -143,7 +143,7 @@ public sealed class SquashFileSystemBuilderTest
 
         var reader = new SquashFileSystemReader(fsImage);
 
-        using Stream fs = reader.OpenFile("file", FileMode.Open);
+        using var fs = reader.OpenFile("file", FileMode.Open);
         var buffer = new byte[100];
         var numRead = fs.Read(buffer, 0, 100);
 
@@ -171,7 +171,7 @@ public sealed class SquashFileSystemBuilderTest
 
         var reader = new SquashFileSystemReader(fsImage);
 
-        using Stream fs = reader.OpenFile("file", FileMode.Open);
+        using var fs = reader.OpenFile("file", FileMode.Open);
         var buffer = new byte[(512 * 1024) + 1024];
         var numRead = fs.Read(buffer, 0, buffer.Length);
 
@@ -208,7 +208,7 @@ public sealed class SquashFileSystemBuilderTest
             GetDecompressor = (kind, options) => kind == SquashFileSystemCompressionKind.Lz4 ? static stream => new SimpleLz4Stream(stream) : null
         });
 
-        using Stream fs = reader.OpenFile("file", FileMode.Open);
+        using var fs = reader.OpenFile("file", FileMode.Open);
         var buffer = new byte[(512 * 1024) + 1024];
         var numRead = fs.Read(buffer, 0, buffer.Length);
 

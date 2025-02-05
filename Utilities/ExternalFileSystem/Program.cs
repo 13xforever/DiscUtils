@@ -240,10 +240,10 @@ class MyFileSystemFactory : VfsFileSystemFactory
             return SingleValueEnumerable.Get(new VfsFileSystemInfo("MyFs", "My File System", Open));
         }
 
-        return Enumerable.Empty<DiscUtils.FileSystemInfo>();
+        return [];
     }
 
-    private DiscFileSystem Open(Stream stream, VolumeInfo volInfo, FileSystemParameters parameters)
+    private MyFileSystem Open(Stream stream, VolumeInfo volInfo, FileSystemParameters parameters)
     {
         return new MyFileSystem();
     }

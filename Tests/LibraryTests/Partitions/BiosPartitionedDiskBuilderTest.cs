@@ -48,7 +48,7 @@ public class BiosPartitionedDiskBuilderTest
         var bpt = new BiosPartitionTable(constructedStream, geometry);
         Assert.Equal(1, bpt.Count);
 
-        using Stream builtPartitionStream = bpt.Partitions[0].Open();
+        using var builtPartitionStream = bpt.Partitions[0].Open();
         builtPartitionStream.Position = 4053;
         Assert.Equal(0xAf, builtPartitionStream.ReadByte());
 

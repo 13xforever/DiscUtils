@@ -111,10 +111,7 @@ internal sealed class ResidentAttributeRecord : AttributeRecord
 
     public override CookedDataRuns GetCookedDataRuns() => new();
 
-    public override IEnumerable<Range<long, long>> GetClusters()
-    {
-        return Enumerable.Empty<Range<long, long>>();
-    }
+    public override IEnumerable<Range<long, long>> GetClusters() => [];
 
     public override int Write(Span<byte> buffer)
     {

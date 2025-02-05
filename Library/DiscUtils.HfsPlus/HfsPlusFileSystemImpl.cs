@@ -114,7 +114,7 @@ internal sealed class HfsPlusFileSystemImpl : VfsFileSystem<DirEntry, File, Dire
 
         if (file.FileContent is not FileBuffer fileBuffer)
         {
-            return Enumerable.Empty<StreamExtent>();
+            return [];
         }
 
         return fileBuffer.EnumerateAllocationExtents();

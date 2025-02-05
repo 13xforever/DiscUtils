@@ -221,7 +221,7 @@ public sealed class RegistryKey
             return _hive.GetCell<ListCell>(_cell.SubKeysIndex).EnumerateKeyNames();
         }
 
-        return Enumerable.Empty<string>();
+        return [];
     }
 
     /// <summary>

@@ -27,13 +27,6 @@ namespace LibraryTests.Fat;
 
 public class FatFileNameTest
 {
-
-    private readonly ITestOutputHelper _output;
-    public FatFileNameTest(ITestOutputHelper output)
-    {
-        _output = output;
-    }
-
     // Generate short name from long name Xunit tests cases
     [Theory]
     [InlineData("A", "A", false)]

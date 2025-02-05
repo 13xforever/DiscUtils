@@ -76,7 +76,11 @@ public class CommandLineEnumSwitch<T> : CommandLineSwitch
         _enumValue = _defaultValue;
         try
         {
+#if NETCOREAPP || NETSTANDARD2_1_OR_GREATER
+            _enumValue = Enum.Parse<T>(Value, true);
+#else
             _enumValue = (T)Enum.Parse(typeof(T), Value, true);
+#endif
         }
         catch
         {

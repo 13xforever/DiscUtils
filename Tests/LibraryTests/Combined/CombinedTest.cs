@@ -48,7 +48,7 @@ public class CombinedTest
 
         VirtualDisk disk = Disk.InitializeDynamic(ms, Ownership.Dispose, 30 * 1024 * 1204);
 
-        PartitionTable pt = BiosPartitionTable.Initialize(disk);
+        var pt = BiosPartitionTable.Initialize(disk);
         pt.Create(15 * 1024 * 1024, WellKnownPartitionType.WindowsFat, false);
         pt.Create(5 * 1024 * 1024, WellKnownPartitionType.WindowsFat, false);
 

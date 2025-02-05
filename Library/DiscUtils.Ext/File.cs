@@ -93,7 +93,7 @@ internal class File : IVfsFile
 
         if (_content is not IFileBuffer fileBuffer)
         {
-            return Enumerable.Empty<StreamExtent>();
+            return [];
         }
 
         return fileBuffer.EnumerateAllocationExtents();
@@ -105,7 +105,7 @@ internal class File : IVfsFile
 
         if (_content is not IFileBuffer fileBuffer)
         {
-            return Enumerable.Empty<Range<long, long>>();
+            return [];
         }
 
         return fileBuffer.EnumerateAllocationClusters();

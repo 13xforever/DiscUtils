@@ -26,33 +26,118 @@
 //
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
 namespace DiskClone;
 
-internal static class NativeMethods
+internal static partial class NativeMethods
 {
-    #region VSSAPI.DLL methods
-//        [DllImport("vssapi.dll")]
-//        internal static extern int CreateVssBackupComponentsInternal(out IVssBackupComponents vssBackupCmpnts);
 
     [DllImport("vssapi.dll", EntryPoint = "?CreateVssBackupComponents@@YGJPAPAVIVssBackupComponents@@@Z")]
+    [SuppressMessage("Interoperability", "SYSLIB1054:Use 'LibraryImportAttribute' instead of 'DllImportAttribute' to generate P/Invoke marshalling code at compile time", Justification = "LibraryImport not supported for COM interface")]
     internal static extern int CreateVssBackupComponents(
         out IVssBackupComponents vssBackupCmpnts
         );
 
     [DllImport("vssapi.dll", EntryPoint = "?CreateVssBackupComponents@@YAJPEAPEAVIVssBackupComponents@@@Z")]
+    [SuppressMessage("Interoperability", "SYSLIB1054:Use 'LibraryImportAttribute' instead of 'DllImportAttribute' to generate P/Invoke marshalling code at compile time", Justification = "LibraryImport not supported for COM interface")]
     internal static extern int CreateVssBackupComponents64(
         out IVssBackupComponents vssBackupCmpnts
         );
 
+#if NET7_0_OR_GREATER
+
+    [LibraryImport("vssapi.dll")]
+    internal static partial void VssFreeSnapshotProperties(IntPtr pProperties);
+
+    [LibraryImport("kernel32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+    internal static partial SafeFileHandle CreateFileW(
+       string fileName,
+       FileAccess fileAccess,
+       FileShare fileShare,
+       IntPtr securityAttributes,
+       FileMode creationDisposition,
+       int flags,
+       IntPtr template);
+
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return:MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool DeviceIoControl(
+        SafeFileHandle hDevice,
+
+        EIOControlCode dwIoControlCode,
+
+        [In] byte[] InBuffer,
+
+        int nInBufferSize,
+
+        out byte OutBuffer,
+
+        int nOutBufferSize,
+
+        out int pBytesReturned,
+
+        IntPtr lpOverlapped
+        );
+
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static unsafe partial bool DeviceIoControl(
+        SafeFileHandle hDevice,
+
+        EIOControlCode dwIoControlCode,
+
+        void* InBuffer,
+
+        int nInBufferSize,
+
+        void* OutBuffer,
+
+        int nOutBufferSize,
+
+        out int pBytesReturned,
+
+        IntPtr lpOverlapped
+        );
+
+    internal const uint FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x00000100;
+    internal const uint FORMAT_MESSAGE_IGNORE_INSERTS = 0x00000200;
+    internal const uint FORMAT_MESSAGE_FROM_SYSTEM = 0x00001000;
+
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return:MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool GetFileSizeEx(
+        SafeFileHandle handle,
+        out long size
+        );
+
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool SetFilePointerEx(
+        SafeFileHandle handle,
+        long position,
+        out long pNewPointer,
+        int MoveMethod
+        );
+
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool ReadFile(
+        SafeFileHandle handle,
+        IntPtr buffer,
+        int count,
+        out int numRead,
+        IntPtr overlapped
+        );
+
+#else
+
     [DllImport("vssapi.dll")]
     internal static extern void VssFreeSnapshotProperties(IntPtr pProperties);
-    #endregion
 
-    #region KERNEL32.DLL methods
     [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     internal static extern SafeFileHandle CreateFileW(
        string fileName,
@@ -132,7 +217,8 @@ internal static class NativeMethods
         out int numRead,
         IntPtr overlapped
         );
-    #endregion
+
+#endif
 
     [StructLayout(LayoutKind.Sequential)]
     internal readonly struct NtfsVolumeData
