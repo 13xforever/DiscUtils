@@ -92,49 +92,47 @@ public sealed class UnicastDnsClient : DnsClient
         var transactionId = _nextTransId++;
         var normName = NormalizeDomainName(name);
 
-        using (var udpClient = new UdpClient(0))
+        using var udpClient = new UdpClient(0);
+        var result = udpClient.BeginReceive(null, null);
+
+        var writer = new PacketWriter(1800);
+        var msg = new Message
         {
-            var result = udpClient.BeginReceive(null, null);
+            TransactionId = transactionId,
+            Flags = new MessageFlags(false, OpCode.Query, false, false, false, false, ResponseCode.Success)
+        };
+        msg.Questions.Add(new Question { Name = normName, Type = type, Class = RecordClass.Internet });
 
-            var writer = new PacketWriter(1800);
-            var msg = new Message
+        msg.WriteTo(writer);
+
+        var msgBytes = writer.GetBytes();
+
+        foreach (var server in _servers)
+        {
+            udpClient.Send(msgBytes, msgBytes.Length, server);
+        }
+
+        for (var i = 0; i < maxRetries; ++i)
+        {
+            var now = DateTime.UtcNow;
+            while (result.AsyncWaitHandle.WaitOne(Math.Max(responseTimeout - (DateTime.UtcNow - now).Milliseconds, 0)))
             {
-                TransactionId = transactionId,
-                Flags = new MessageFlags(false, OpCode.Query, false, false, false, false, ResponseCode.Success)
-            };
-            msg.Questions.Add(new Question { Name = normName, Type = type, Class = RecordClass.Internet });
-
-            msg.WriteTo(writer);
-
-            var msgBytes = writer.GetBytes();
-
-            foreach (var server in _servers)
-            {
-                udpClient.Send(msgBytes, msgBytes.Length, server);
-            }
-
-            for (var i = 0; i < maxRetries; ++i)
-            {
-                var now = DateTime.UtcNow;
-                while (result.AsyncWaitHandle.WaitOne(Math.Max(responseTimeout - (DateTime.UtcNow - now).Milliseconds, 0)))
+                try
                 {
-                    try
-                    {
-                        IPEndPoint sourceEndPoint = null;
-                        var packetBytes = udpClient.EndReceive(result, ref sourceEndPoint);
-                        var reader = new PacketReader(packetBytes);
+                    IPEndPoint sourceEndPoint = null;
+                    var packetBytes = udpClient.EndReceive(result, ref sourceEndPoint);
+                    var reader = new PacketReader(packetBytes);
 
-                        var response = Message.Read(reader);
+                    var response = Message.Read(reader);
 
-                        if (response.TransactionId == transactionId)
-                        {
-                            return response.Answers;
-                        }
-                    }
-                    catch
+                    if (response.TransactionId == transactionId)
                     {
-                        // Do nothing - bad packet (probably...)
+                        return response.Answers;
                     }
+                }
+                catch
+                {
+                    // Do nothing - bad packet (probably...)
                 }
             }
         }

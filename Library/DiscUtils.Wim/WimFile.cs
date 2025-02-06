@@ -108,27 +108,25 @@ public class WimFile
     {
         var i = 0;
 
-        using (var s = OpenResourceStream(_fileHeader.OffsetTableHeader))
+        using var s = OpenResourceStream(_fileHeader.OffsetTableHeader);
+        long numRead = 0;
+        Span<byte> resBuffer = stackalloc byte[ResourceInfo.Size];
+        while (numRead < s.Length)
         {
-            long numRead = 0;
-            Span<byte> resBuffer = stackalloc byte[ResourceInfo.Size];
-            while (numRead < s.Length)
+            s.ReadExactly(resBuffer);
+            numRead += ResourceInfo.Size;
+
+            var info = new ResourceInfo();
+            info.Read(resBuffer);
+
+            if ((info.Header.Flags & ResourceFlags.MetaData) != 0)
             {
-                s.ReadExactly(resBuffer);
-                numRead += ResourceInfo.Size;
-
-                var info = new ResourceInfo();
-                info.Read(resBuffer);
-
-                if ((info.Header.Flags & ResourceFlags.MetaData) != 0)
+                if (i == index)
                 {
-                    if (i == index)
-                    {
-                        return info.Header;
-                    }
-
-                    ++i;
+                    return info.Header;
                 }
+
+                ++i;
             }
         }
 

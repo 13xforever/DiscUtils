@@ -320,91 +320,87 @@ public class FatFileSystemTest
     [Fact]
     public void TestCreateDirectoryAndFailure()
     {
-        using (var diskStream = new SparseMemoryStream())
+        using var diskStream = new SparseMemoryStream();
+        using var fs = FatFileSystem.FormatFloppy(diskStream, FloppyDiskType.HighDensity, "FLOPPY_IMG ");
+
+        fs.CreateDirectory(Path.Combine("BAR", "BAZ", "QUX"));
+        fs.CreateDirectory(Path.Combine("BAR", "BAZ", "QUX")); // Nothing is happening here
+        fs.CreateDirectory("BAR");
         {
-            using var fs = FatFileSystem.FormatFloppy(diskStream, FloppyDiskType.HighDensity, "FLOPPY_IMG ");
-
-            fs.CreateDirectory(Path.Combine("BAR", "BAZ", "QUX"));
-            fs.CreateDirectory(Path.Combine("BAR", "BAZ", "QUX")); // Nothing is happening here
-            fs.CreateDirectory("BAR");
-            {
-                using var file = fs.OpenFile(Path.Combine("BAR", "BAZ", "QUX", "TEST"), FileMode.Create);
-                file.WriteByte(0);
-            }
-
-            Assert.Throws<IOException>(() => fs.CreateDirectory(Path.Combine("BAR", "BAZ", "QUX", "TEST")));
+            using var file = fs.OpenFile(Path.Combine("BAR", "BAZ", "QUX", "TEST"), FileMode.Create);
+            file.WriteByte(0);
         }
+
+        Assert.Throws<IOException>(() => fs.CreateDirectory(Path.Combine("BAR", "BAZ", "QUX", "TEST")));
     }
 
     [Fact]
     public void TestLargeFileCreateOpenAppendTruncate()
     {
-        using (var diskStream = new SparseMemoryStream())
+        using var diskStream = new SparseMemoryStream();
+        using var fs = FatFileSystem.FormatFloppy(diskStream, FloppyDiskType.HighDensity, "FLOPPY_IMG ");
+
+        var buffer = new byte[1024 * 1024];
+        var rnd = new Random(0);
+        rnd.NextBytes(buffer);
+        using (var file = fs.OpenFile("TEST", FileMode.Create))
         {
-            using var fs = FatFileSystem.FormatFloppy(diskStream, FloppyDiskType.HighDensity, "FLOPPY_IMG ");
-
-            var buffer = new byte[1024 * 1024];
-            var rnd = new Random(0);
-            rnd.NextBytes(buffer);
-            using (var file = fs.OpenFile("TEST", FileMode.Create))
-            {
-                file.Write(buffer, 0, buffer.Length);
-            }
-
-            using (var file = fs.OpenFile("TEST", FileMode.Open))
-            {
-                var buffer2 = new byte[buffer.Length];
-                int length = file.Read(buffer2, 0, buffer2.Length);
-                Assert.Equal(length, buffer2.Length);
-
-                for (int i = 0; i < buffer.Length; i++)
-                {
-                    Assert.Equal(buffer[i], buffer2[i]);
-                }
-            }
-
-            using (var file = fs.OpenFile("TEST", FileMode.Append))
-            {
-                var smallerBuffer = new byte[] { 1, 2, 3, 4 };
-                file.Write(smallerBuffer, 0, smallerBuffer.Length);
-            }
-
-            using (var file = fs.OpenFile("TEST", FileMode.Open))
-            {
-                var buffer2 = new byte[buffer.Length + 4];
-                int length = file.Read(buffer2, 0, buffer2.Length);
-                Assert.Equal(length, buffer2.Length);
-
-                for (int i = 0; i < buffer.Length; i++)
-                {
-                    Assert.Equal(buffer[i], buffer2[i]);
-                }
-
-                for (int i = 0; i < 4; i++)
-                {
-                    Assert.Equal(i + 1, buffer2[buffer.Length + i]);
-                }
-            }
-
-            using (var file = fs.OpenFile("TEST", FileMode.Truncate))
-            {
-                file.Write([0]);
-            }
-
-            var attr = fs.GetFileLength("TEST");
-            Assert.Equal(1, attr);
-
-            fs.DeleteFile("TEST");
-
-            Assert.Throws<FileNotFoundException>(() => fs.GetFileLength("TEST"));
-
-            using (var file = fs.OpenFile("ANOTHER", FileMode.Create))
-            {
-                file.Write(buffer, 0, buffer.Length);
-            }
-
-            Assert.True(fs.FileExists("ANOTHER"));
+            file.Write(buffer, 0, buffer.Length);
         }
+
+        using (var file = fs.OpenFile("TEST", FileMode.Open))
+        {
+            var buffer2 = new byte[buffer.Length];
+            int length = file.Read(buffer2, 0, buffer2.Length);
+            Assert.Equal(length, buffer2.Length);
+
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                Assert.Equal(buffer[i], buffer2[i]);
+            }
+        }
+
+        using (var file = fs.OpenFile("TEST", FileMode.Append))
+        {
+            var smallerBuffer = new byte[] { 1, 2, 3, 4 };
+            file.Write(smallerBuffer, 0, smallerBuffer.Length);
+        }
+
+        using (var file = fs.OpenFile("TEST", FileMode.Open))
+        {
+            var buffer2 = new byte[buffer.Length + 4];
+            int length = file.Read(buffer2, 0, buffer2.Length);
+            Assert.Equal(length, buffer2.Length);
+
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                Assert.Equal(buffer[i], buffer2[i]);
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                Assert.Equal(i + 1, buffer2[buffer.Length + i]);
+            }
+        }
+
+        using (var file = fs.OpenFile("TEST", FileMode.Truncate))
+        {
+            file.Write([0]);
+        }
+
+        var attr = fs.GetFileLength("TEST");
+        Assert.Equal(1, attr);
+
+        fs.DeleteFile("TEST");
+
+        Assert.Throws<FileNotFoundException>(() => fs.GetFileLength("TEST"));
+
+        using (var file = fs.OpenFile("ANOTHER", FileMode.Create))
+        {
+            file.Write(buffer, 0, buffer.Length);
+        }
+
+        Assert.True(fs.FileExists("ANOTHER"));
     }
 
     [Fact]
