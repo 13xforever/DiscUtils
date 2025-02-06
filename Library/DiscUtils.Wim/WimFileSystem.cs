@@ -713,7 +713,8 @@ public class WimFileSystem : ReadOnlyDiscFileSystem, IWindowsFileSystem
 
     private IEnumerable<string> DoSearch(string path, Func<string, bool> filter, bool subFolders, bool dirs, bool files)
     {
-        var parentDirEntry = GetEntry(path);
+        var parentDirEntry = GetEntry(path)
+            ?? throw new DirectoryNotFoundException($"Directory '{path}' not found");
 
         if (parentDirEntry.SubdirOffset == 0)
         {
