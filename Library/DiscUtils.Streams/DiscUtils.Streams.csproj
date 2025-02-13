@@ -6,12 +6,16 @@
     <PackageTags>DiscUtils;Streams</PackageTags>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Memory" Version="4.5.5" />
-    <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
-    <PackageReference Include="LTRData.Extensions" Version="1.0.11" />
+    <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.*" />
+    <PackageReference Include="LTRData.Extensions" Version="1.0.*" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework.CompareTo(`net461`))' &gt;= 0">
-    <PackageReference Include="Microsoft.Bcl.HashCode" Version="6.0.0" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.*" />
+    <PackageReference Include="System.Memory" Version="4.*" />
+    <PackageReference Include="Microsoft.Bcl.HashCode" Version="*" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework.CompareTo(`net461`))' &lt; 0">
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.*" />
+    <PackageReference Include="System.Memory" Version="4.5.*" />
   </ItemGroup>
 </Project>
