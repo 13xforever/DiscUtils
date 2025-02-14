@@ -196,6 +196,15 @@ public class RegistryKeyTest
     }
 
     [Fact]
+    public void CreateKeyWithInitialSeparator()
+    {
+        var newKey = hive.Root.CreateSubKey(@"\Child\Grandchild");
+        Assert.NotNull(newKey);
+        Assert.Equal(1, hive.Root.SubKeyCount);
+        Assert.Equal(1, hive.Root.OpenSubKey(@"\cHiLd").SubKeyCount);
+    }
+
+    [Fact]
     public void CreateExistingKey()
     {
         var newKey = hive.Root.CreateSubKey(@"Child");

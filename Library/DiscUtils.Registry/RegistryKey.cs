@@ -533,7 +533,7 @@ public sealed class RegistryKey
             return this;
         }
 
-        var split = subkey.Split(Utilities.PathSeparators, 2);
+        var split = subkey.Split(Utilities.PathSeparators, 2, StringSplitOptions.RemoveEmptyEntries);
         var cellIndex = FindSubKeyCell(split[0]);
 
         if (cellIndex < 0)
@@ -576,7 +576,7 @@ public sealed class RegistryKey
             return this;
         }
 
-        var split = path.Split(Utilities.PathSeparators, 2);
+        var split = path.Split(Utilities.PathSeparators, 2, StringSplitOptions.RemoveEmptyEntries);
         var cellIndex = FindSubKeyCell(split[0]);
 
         if (cellIndex < 0)
@@ -645,7 +645,7 @@ public sealed class RegistryKey
             throw new ArgumentException("Invalid SubKey", nameof(subkey));
         }
 
-        var split = subkey.Split(Utilities.PathSeparators, 2);
+        var split = subkey.Split(Utilities.PathSeparators, 2, StringSplitOptions.RemoveEmptyEntries);
 
         var subkeyCellIndex = FindSubKeyCell(split[0]);
         if (subkeyCellIndex < 0)
