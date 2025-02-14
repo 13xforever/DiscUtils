@@ -269,6 +269,11 @@ public class RegistryHive : IDisposable
             {
                 throw new RegistryCorruptException("Registry hive needs transaction logs to recover pending changes");
             }
+
+            if (_header.RootCell < 0)
+            {
+                throw new RegistryCorruptException("Invalid registry hive");
+            }
         }
 
         if (ownership == Ownership.Dispose && logstreams is not null)
@@ -291,6 +296,11 @@ public class RegistryHive : IDisposable
             _bins.Add(header);
 
             pos += header.BinSize;
+        }
+
+        if (GetCell<KeyNodeCell>(_header.RootCell) is null)
+        {
+            throw new RegistryCorruptException("Registry hive is corrupt");
         }
     }
 

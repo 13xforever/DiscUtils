@@ -44,9 +44,20 @@ public class RegistryHiveTest
     }
 
     [Fact]
+    public void InvalidHive()
+    {
+        var buffer = new byte[512 << 10];
+        
+        new Random().NextBytes(buffer);
+        
+        var stream = new MemoryStream(buffer, writable: false);
+        
+        Assert.Throws<RegistryCorruptException>(() => new RegistryHive(stream));
+    }
+
+    [Fact]
     public void Create_Null()
     {
         Assert.Throws<ArgumentNullException>(() => RegistryHive.Create((Stream)null));
     }
-
 }
