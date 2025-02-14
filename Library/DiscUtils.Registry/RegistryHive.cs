@@ -269,11 +269,6 @@ public class RegistryHive : IDisposable
             {
                 throw new RegistryCorruptException("Registry hive needs transaction logs to recover pending changes");
             }
-
-            if (_header.RootCell < 0)
-            {
-                throw new RegistryCorruptException("Invalid registry hive");
-            }
         }
 
         if (ownership == Ownership.Dispose && logstreams is not null)
@@ -298,7 +293,7 @@ public class RegistryHive : IDisposable
             pos += header.BinSize;
         }
 
-        if (GetCell<KeyNodeCell>(_header.RootCell) is null)
+        if (_bins.Count == 0)
         {
             throw new RegistryCorruptException("Registry hive is corrupt");
         }
@@ -307,7 +302,16 @@ public class RegistryHive : IDisposable
     /// <summary>
     /// Gets the root key in the registry hive.
     /// </summary>
-    public RegistryKey Root => new(this, GetCell<KeyNodeCell>(_header.RootCell));
+    public RegistryKey Root
+    {
+        get
+        {
+            var cell = GetCell<KeyNodeCell>(_header.RootCell)
+                ?? throw new RegistryCorruptException("Registry hive is corrupt");
+
+            return new(this, cell);
+        }
+    }
 
     /// <summary>
     /// Disposes of this instance, freeing any underlying stream (if any).
@@ -383,31 +387,38 @@ public class RegistryHive : IDisposable
         stream.WriteByte(0);
 
         // Temporary hive to perform construction of higher-level structures
-        var newHive = new RegistryHive(stream);
+        var newHive = new RegistryHive(stream, ownership);
+
+        newHive.CreateRoot();
+
+        // Finally, return the new hive
+        return newHive;
+    }
+
+    private void CreateRoot()
+    {
         var rootCell = new KeyNodeCell("root", -1)
         {
             Flags = RegistryKeyFlags.Normal | RegistryKeyFlags.Root
         };
-        newHive.UpdateCell(rootCell, true);
+        UpdateCell(rootCell, true);
 
         var sd = new RegistrySecurity("O:BAG:BAD:PAI(A;;KA;;;SY)(A;CI;KA;;;BA)");
         var secCell = new SecurityCell(sd);
-        newHive.UpdateCell(secCell, true);
+        UpdateCell(secCell, true);
         secCell.NextIndex = secCell.Index;
         secCell.PreviousIndex = secCell.Index;
-        newHive.UpdateCell(secCell, false);
+        UpdateCell(secCell, false);
 
         rootCell.SecurityIndex = secCell.Index;
-        newHive.UpdateCell(rootCell, false);
+        UpdateCell(rootCell, false);
 
         // Ref the root cell from the hive header
-        hiveHeader.RootCell = rootCell.Index;
-        hiveHeader.WriteTo(hiveHeaderBuffer);
-        stream.Position = 0;
-        stream.Write(hiveHeaderBuffer);
-
-        // Finally, return the new hive
-        return new RegistryHive(stream, ownership);
+        Span<byte> hiveHeaderBuffer = stackalloc byte[HiveHeader.HeaderSize];
+        _header.RootCell = rootCell.Index;
+        _header.WriteTo(hiveHeaderBuffer);
+        _fileStream.Position = 0;
+        _fileStream.Write(hiveHeaderBuffer);
     }
 
     /// <summary>
