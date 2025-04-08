@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Security.Principal;
 using DiscUtils;
 using DiscUtils.Common;
@@ -42,6 +43,9 @@ class CloneVolume
     public VssSnapshotProperties SnapshotProperties;
 }
 
+#if NET5_0_OR_GREATER
+[SupportedOSPlatform("windows")]
+#endif
 class Program : ProgramBase
 {
     private CommandLineEnumSwitch<GeometryTranslation> _translation;
