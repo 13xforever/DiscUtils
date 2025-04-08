@@ -255,7 +255,7 @@ internal class VfsCDReader : VfsReadOnlyFileSystem<ReaderDirEntry, File, ReaderD
                 return false;
             }
 
-            var entry = new BootValidationEntry(bootCatalog, 0);
+            var entry = new BootValidationEntry(bootCatalog);
             return entry.ChecksumValid;
         }
     }
@@ -644,7 +644,7 @@ internal class VfsCDReader : VfsReadOnlyFileSystem<ReaderDirEntry, File, ReaderD
             return null;
         }
 
-        var validationEntry = new BootValidationEntry(bootCatalog, 0);
+        var validationEntry = new BootValidationEntry(bootCatalog);
         if (!validationEntry.ChecksumValid)
         {
             return null;

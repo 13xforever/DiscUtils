@@ -39,8 +39,7 @@ internal class BTreeGenericRecord : BTreeNodeRecord
 
     public override int ReadFrom(ReadOnlySpan<byte> buffer)
     {
-        _data = StreamUtilities.GetUninitializedArray<byte>(_size);
-        buffer.Slice(0, _size).CopyTo(_data);
+        _data = buffer.Slice(0, _size).ToArray();
         return _size;
     }
 

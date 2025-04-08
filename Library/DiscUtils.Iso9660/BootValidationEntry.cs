@@ -39,10 +39,9 @@ internal class BootValidationEntry
         ManfId = ".Net DiscUtils";
     }
 
-    public BootValidationEntry(byte[] src, int offset)
+    public BootValidationEntry(ReadOnlySpan<byte> src)
     {
-        _data = StreamUtilities.GetUninitializedArray<byte>(32);
-        System.Buffer.BlockCopy(src, offset, _data, 0, 32);
+        _data = src.Slice(0, 32).ToArray();
 
         HeaderId = _data[0];
         PlatformId = _data[1];

@@ -611,7 +611,7 @@ public static class EndianUtilities
 #endif
     }
 
-    public static ReadOnlySpan<byte> StringToLittleEndianUnicodeBytesToString(ReadOnlySpan<char> chars)
+    public static ReadOnlySpan<byte> StringToLittleEndianUnicodeBytes(ReadOnlySpan<char> chars)
     {
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP
         if (!BitConverter.IsLittleEndian)

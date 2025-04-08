@@ -33,7 +33,6 @@ internal sealed class GenericSystemUseEntry : SystemUseEntry
     {
         CheckAndSetCommonProperties(name, length, version, 4, 0xFF);
 
-        Data = StreamUtilities.GetUninitializedArray<byte>(length - 4);
-        data.Slice(4, length - 4).CopyTo(Data);
+        Data = data.Slice(4, length - 4).ToArray();
     }
 }

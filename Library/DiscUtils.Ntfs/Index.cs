@@ -56,14 +56,26 @@ internal class Index : IDisposable
 
         using (var s = _file.OpenStream(AttributeType.IndexRoot, _name, FileAccess.Read))
         {
+            byte[] allocated = null;
+
             var buffer = s.Length <= 1024
                 ? stackalloc byte[(int)s.Length]
-                : StreamUtilities.GetUninitializedArray<byte>((int)s.Length);
+                : (allocated = ArrayPool<byte>.Shared.Rent((int)s.Length)).AsSpan(0, (int)s.Length);
 
-            s.ReadExactly(buffer);
-            
-            _rootNode = new IndexNode(WriteRootNodeToDisk, 0, this, true, buffer.Slice(IndexRoot.HeaderOffset));
+            try
+            {
+                s.ReadExactly(buffer);
 
+                _rootNode = new IndexNode(WriteRootNodeToDisk, 0, this, true, buffer.Slice(IndexRoot.HeaderOffset));
+
+            }
+            finally
+            {
+                if (allocated is not null)
+                {
+                    ArrayPool<byte>.Shared.Return(allocated);
+                }
+            }
             // Give the attribute some room to breathe, so long as it doesn't squeeze others out
             // BROKEN, BROKEN, BROKEN - how to figure this out?  Query at the point of adding entries to the root node?
             _rootNode.TotalSpaceAvailable += _file.MftRecordFreeSpace(AttributeType.IndexRoot, _name) - 100;

@@ -122,8 +122,8 @@ internal sealed class ParentLocator : IByteArraySerializable
 
         foreach (var entry in Entries)
         {
-            var keyData = EndianUtilities.StringToLittleEndianUnicodeBytesToString(entry.Key.AsSpan());
-            var valueData = EndianUtilities.StringToLittleEndianUnicodeBytesToString(entry.Value.AsSpan());
+            var keyData = EndianUtilities.StringToLittleEndianUnicodeBytes(entry.Key.AsSpan());
+            var valueData = EndianUtilities.StringToLittleEndianUnicodeBytes(entry.Value.AsSpan());
 
             keyData.CopyTo(buffer.Slice(20 + Count * 12 + entryOffset));
             EndianUtilities.WriteBytesLittleEndian((ushort)(20 + Count * 12 + entryOffset), buffer.Slice(20 + item * 12));

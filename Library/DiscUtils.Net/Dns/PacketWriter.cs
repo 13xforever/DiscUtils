@@ -65,10 +65,5 @@ internal sealed class PacketWriter
         _pos += 2;
     }
 
-    public byte[] GetBytes()
-    {
-        var result = StreamUtilities.GetUninitializedArray<byte>(_pos);
-        System.Buffer.BlockCopy(_data, 0, result, 0, _pos);
-        return result;
-    }
+    public byte[] GetBytes() => _data.AsSpan(0, _pos).ToArray();
 }

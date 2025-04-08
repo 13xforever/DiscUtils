@@ -1065,9 +1065,12 @@ public sealed class NtfsFileSystem : DiscFileSystem, IClusterBasedFileSystem,
                     attributeType == AttributeType.Data &&
                     dirEntry.Value.Details.FileAttributes.HasFlag(FileAttributes.Directory))
                 {
-                    return new CachedDiscDirectoryInfo(this, path, dirEntry.Value.Details.FileAttributes,
-                                                    dirEntry.Value.Details.ModificationTime, dirEntry.Value.Details.ModificationTime,
-                                                    dirEntry.Value.Details.ModificationTime);
+                    return new CachedDiscDirectoryInfo(this,
+                                                       path,
+                                                       dirEntry.Value.Details.FileAttributes,
+                                                       dirEntry.Value.Details.ModificationTime,
+                                                       dirEntry.Value.Details.ModificationTime,
+                                                       dirEntry.Value.Details.ModificationTime);
                 }
             }
             catch

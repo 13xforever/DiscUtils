@@ -39,8 +39,7 @@ internal sealed class GenericFixupRecord : FixupRecordBase
 
     protected override void Read(ReadOnlySpan<byte> buffer)
     {
-        var newContent = StreamUtilities.GetUninitializedArray<byte>((UpdateSequenceCount - 1) * _bytesPerSector);
-        buffer.Slice(0, newContent.Length).CopyTo(newContent);
+        var newContent = buffer.Slice(0, (UpdateSequenceCount - 1) * _bytesPerSector).ToArray();
         Content = newContent;
     }
 

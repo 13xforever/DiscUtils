@@ -53,9 +53,28 @@ internal readonly struct NtfsStream
     public T GetContent<T>()
         where T : IByteArraySerializable, IDiagnosticTraceable, new()
     {
-        var buffer = GetContent();
+        using var s = Open(FileAccess.Read);
         var value = new T();
-        value.ReadFrom(buffer);
+
+        byte[] allocated = null;
+
+        var buffer = s.Length <= 1024
+            ? stackalloc byte[(int)s.Length]
+            : (allocated = ArrayPool<byte>.Shared.Rent((int)s.Length)).AsSpan(0, (int)s.Length);
+
+        try
+        {
+            s.ReadExactly(buffer);
+            value.ReadFrom(buffer);
+        }
+        finally
+        {
+            if (allocated is not null)
+            {
+                ArrayPool<byte>.Shared.Return(allocated);
+            }
+        }
+
         return value;
     }
 

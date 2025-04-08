@@ -66,8 +66,7 @@ public sealed class TextRecord : ResourceRecord
 
         if (i < value.Length)
         {
-            var data = StreamUtilities.GetUninitializedArray<byte>(value.Length - (i + 1));
-            System.Buffer.BlockCopy(value, i + 1, data, 0, data.Length);
+            var data = value.AsSpan(i + 1, value.Length - (i + 1)).ToArray();
             Values[Encoding.ASCII.GetString(value, 0, i)] = data;
         }
         else
