@@ -9,6 +9,9 @@
   <ItemGroup>
     <ProjectReference Include="..\DiscUtils.Streams\DiscUtils.Streams.csproj" />
   </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework.CompareTo(`net461`))' &lt; 0">
+    <PackageReference Include="System.ValueTuple" Version="4.5.*" />
+  </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework.CompareTo(`net5`))' &gt;= 0">
     <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.*" />
   </ItemGroup>
