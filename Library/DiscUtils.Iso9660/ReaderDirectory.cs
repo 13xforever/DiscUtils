@@ -73,7 +73,10 @@ internal class ReaderDirectory : File, IVfsDirectory<ReaderDirEntry, File>
                         }
                         else
                         {
-                            _records.Add(childDirEntry);
+                            if (!_records.ContainsKey(childDirEntry.FileName))
+                            {
+                                _records.Add(childDirEntry);
+                            }
                         }
                     }
                     else if (dr.FileIdentifier == "\0")
